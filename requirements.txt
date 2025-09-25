@@ -1,0 +1,7 @@
+Flask
+pymysql
+PyJWT
+argon2-cffi
+pandas
+numpy
+# $ pip install -r requirements.txt
