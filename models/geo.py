@@ -31,3 +31,11 @@ class API:
             return datos
         else:
             return f"Latitud: {lat}, Longitud: {long}, Error: No se pudo obtener la dirección"
+
+    
+
+
+
+    
+
+
