@@ -1,11 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
-</html>
+{% extends "master_page.html" %}
+
+{% block title %}Choose an address{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/map.css') }}" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block body %}
+<div class="col-md-6">
+    <div id="map"></div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+
+
+    // Configuración del mapa
+    const map = L.map('map').setView([-9.19, -75.0152], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        minZoom: 6,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Variable para el marcador de nueva ubicación
+    let marker;
+
+    // Configuración del buscador
+    const searchControl = L.Control.geocoder({
+        position: 'topright',
+        defaultMarkGeocode: false,
+        geocoder: L.Control.Geocoder.nominatim({
+            geocodingQueryParams: { countrycodes: 'pe' }
+        })
+    }).on('markgeocode', function (e) {
+        const latlng = e.geocode.center;
+        map.setView(latlng, 16);
+
+        if (!marker) {
+            marker = L.marker(latlng).addTo(map);
+        } else {
+            marker.setLatLng(latlng);
+        }
+
+        // document.getElementById('lat').textContent = latlng.lat.toFixed(6);
+        // document.getElementById('lng').textContent = latlng.lng.toFixed(6);
+    }).addTo(map);
+
+    // Ajustar el campo de búsqueda
+    setTimeout(() => {
+        const input = document.querySelector('.leaflet-control-geocoder input');
+        if (input) {
+            input.placeholder = "Buscar ubicación en Perú...";
+            input.style.width = '350px';
+        }
+    }, 300);
+
+</script>
+{% endblock %}

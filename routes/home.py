@@ -8,7 +8,7 @@ def home():
 
 @bp_home.route('/home')
 def index():
-    return render_template('index.html')
+    return render_template('welcome_page.html')
 
 @bp_home.route('/menu')
 def menu():

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %} {% endblock %}
+    </title>
+    <!-- icono de la pagina web -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('home.uploads', filename='rocket.ico') }}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/bootstrap.min.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/index.css') }}">
+
+    {% block style %} {% endblock %}
+    
+</head>
+<body>
+    {% block body %} {% endblock %}
+
+    {% block script %} {% endblock %}
+</body>
+</html>

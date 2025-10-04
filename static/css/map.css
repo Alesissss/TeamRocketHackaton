@@ -1,0 +1,33 @@
+#map {
+    height: 100vh;
+    width: 100vw;
+}
+
+.h2 {
+    text-align: center;
+    margin-top: 20px;
+    color: aliceblue;
+}
+
+#info {
+    margin-top: 10px;
+}
+
+.leaflet-control-geocoder {
+    display: block !important;
+    width: 100% !important;
+}
+
+.leaflet-control-geocoder .leaflet-control-geocoder-form {
+    display: block !important;
+    width: 100% !important;
+    align-content: center !important;
+}
+
+.leaflet-control-geocoder .leaflet-control-geocoder-icon {
+    display: none !important;
+}
+
+#map>div.leaflet-control-container>div.leaflet-top.leaflet-right>div {
+    align-content: center;
+}
