@@ -4,4 +4,7 @@ PyJWT
 argon2-cffi
 pandas
 numpy
+seaborn
+matplotlib
+requests
 # $ pip install -r requirements.txt
