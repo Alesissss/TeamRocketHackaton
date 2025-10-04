@@ -43,6 +43,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 
+def lon_to_0360(lon):
+    # lon en [-180,180] → [0,360)
+    return (lon + 360.0) % 360.0
+
+def lon_to_180(lon):
+    # lon en [0,360) → [-180,180]
+    return ((lon + 180.0) % 360.0) - 180.0
+
 DATA_RODS_URL = "https://hydro1.gesdisc.eosdis.nasa.gov/daac-bin/access/timeseries.cgi"
 
 # Variables we will use

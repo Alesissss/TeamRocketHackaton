@@ -9,8 +9,8 @@ import io
 import warnings
 warnings.filterwarnings("ignore")
 
-LAT = -145.1953
-LONG = 60.1598
+LONG = -109.87
+LAT = 38.13
 
 def get_time_series(start_date,end_date,latitude,longitude,variable):
     """
@@ -67,6 +67,8 @@ df_precip = parse_time_series(
                 variable="NLDAS2:NLDAS_FORA0125_H_v2.0:Rainf"
             )
         )
+
+print(df_precip)
 
 # 2-meter above ground temperature [k]
 df_tair = parse_time_series(
