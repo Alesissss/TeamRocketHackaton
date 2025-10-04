@@ -9,6 +9,9 @@ import io
 import warnings
 warnings.filterwarnings("ignore")
 
+LAT = -145.1953
+LONG = 60.1598
+
 def get_time_series(start_date,end_date,latitude,longitude,variable):
     """
     Calls the data rods service to get a time series
@@ -54,33 +57,94 @@ def parse_time_series(ts_str):
                        header=10,parse_dates=["time"])
     return parameters, df
 
+# total precipitation [kg m-2]
 df_precip = parse_time_series(
             get_time_series(
                 start_date="2022-07-01T00", 
-                end_date="2022-09-01T00",
-                latitude=38.89,
-                longitude=-88.18,
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=-LONG,
                 variable="NLDAS2:NLDAS_FORA0125_H_v2.0:Rainf"
             )
         )
 
+# 2-meter above ground temperature [k]
+df_tair = parse_time_series(
+            get_time_series(
+                start_date="2022-07-01T00", 
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=LONG,
+                variable="NLDAS2:NLDAS_FORA0125_H_v2.0:Tair"
+            )
+        )
+
+# 2-meter above ground specific humidity [kg kg-1]
+df_qair = parse_time_series(
+            get_time_series(
+                start_date="2022-07-01T00", 
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=LONG,
+                variable="NLDAS2:NLDAS_FORA0125_H_v2.0:Qair"
+            )
+        )
+
+# Soil moisture content (0-100cm) [kg m-2]
 df_soil = parse_time_series(
             get_time_series(
                 start_date="2022-07-01T00", 
-                end_date="2022-09-01T00",
-                latitude=38.89,
-                longitude=-88.18,
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=LONG,
                 variable="NLDAS2:NLDAS_NOAH0125_H_v2.0:SoilM_0_100cm"
           )
         )
 
-df_soil[1]['data']
+# sensible heat flux [w m-2]
+df_Qh = parse_time_series(
+            get_time_series(
+                start_date="2022-07-01T00", 
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=LONG,
+                variable="NLDAS2:NLDAS_NOAH0125_H_v2.0:Qh"
+          )
+        )
 
-d = {'time': pd.to_datetime(df_precip[1]['time'], unit='s'), 
-    'Rainf': df_precip[1]['data'], 
-    'SoilM_0_100cm': df_soil[1]['data']}
-    
+# ground heat flux [w m-2]
+df_Qg = parse_time_series(
+            get_time_series(
+                start_date="2022-07-01T00", 
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=LONG,
+                variable="NLDAS2:NLDAS_NOAH0125_H_v2.0:Qg"
+          )
+        )
+
+# total evapotranspiration [kg m-2]
+df_Evap = parse_time_series(
+            get_time_series(
+                start_date="2022-07-01T00", 
+                end_date="2025-09-01T00",
+                latitude=LAT,
+                longitude=LONG,
+                variable="NLDAS2:NLDAS_NOAH0125_H_v2.0:Evap"
+          )
+        )
+
+d = {
+    'time': pd.to_datetime(df_precip[1]['time']),
+    'Rainf': df_precip[1]['data'],
+    'Tair': df_tair[1]['data'],
+    'Qair': df_qair[1]['data'],
+    'SoilM_0_100cm': df_soil[1]['data'],
+    'Qh': df_Qh[1]['data'],
+    'Qg': df_Qg[1]['data'],
+    'Evap': df_Evap[1]['data']
+}
+
 df = pd.DataFrame(data=d)
-df.head()
-
+print(df.shape)
 print(df.head())
