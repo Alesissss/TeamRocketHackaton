@@ -1,5 +1,6 @@
 #pip==25.1.1 si se quiere una version especifica
 Flask
+Flask-Babel
 pymysql
 PyJWT
 argon2-cffi

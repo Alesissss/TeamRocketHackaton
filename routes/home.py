@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, send_from_directory, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, send_from_directory, redirect, url_for, session
 
 bp_home = Blueprint('home', __name__)
 
@@ -13,6 +13,12 @@ def index():
 @bp_home.route('/menu')
 def menu():
     return render_template('menu.html')
+
+@bp_home.route('/change_language/<language>')
+def change_language(language):
+    session['lang'] = language
+    # Redirigir a la página de donde vino o al home
+    return redirect(request.referrer or url_for('home.index'))
 
 @bp_home.route('/uploads/<path:filename>')
 def uploads(filename):

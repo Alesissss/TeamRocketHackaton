@@ -1,0 +1,20 @@
+# Traducciones en español
+msgid ""
+msgstr ""
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Will it be rain on my parade?"
+msgstr "¿Lloverá en mi desfile?"
+
+msgid "¿Quieres saber si lloverá en tu área?"
+msgstr "¿Quieres saber si lloverá en tu área?"
+
+msgid "Continuar"
+msgstr "Continuar"
+
+msgid "Mapa Interactivo"
+msgstr "Mapa Interactivo"
+
+msgid "Idioma"
+msgstr "Idioma"

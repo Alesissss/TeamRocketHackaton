@@ -1,6 +1,6 @@
 {% extends "master_page.html" %}
 
-{% block title %}Choose an address{% endblock %}
+{% block title %}{{ _('Mapa Interactivo') }}{% endblock %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/map.css') }}" />
@@ -9,9 +9,13 @@
 {% endblock %}
 
 {% block body %}
-<div class="col-md-6">
-    <div id="map"></div>
-
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mt-3 mb-4">{{ _('Mapa Interactivo') }}</h2>
+            <div id="map" style="height: 80vh; width: 100%;"></div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
