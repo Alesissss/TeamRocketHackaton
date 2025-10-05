@@ -1,3 +1,6 @@
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <!-- Modal Predictor Climático -->
 <div id="modalPredictorClimatico" class="modal-overlay" style="display: none;">
     <div class="modal-container">
@@ -54,7 +57,7 @@
                     <span>Senderismo</span>
                 </button>
 
-                <button class="activity-btn active" data-activity="pesca">
+                <button class="activity-btn" data-activity="pesca">
                     <div class="activity-icon">
                         <!-- Aquí van tus íconos -->
                     </div>
@@ -155,11 +158,11 @@
                 </div>
 
                 <!-- Botón Exportar -->
-                <button class="btn-exportar">
+                <button class="btn-exportar" onclick="exportarAPDF()">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 0L4 4h3v8h2V4h3L8 0zm-6 14h12v2H2v-2z"/>
                     </svg>
-                    Exportar
+                    Exportar PDF
                 </button>
             </div>
         </div>
@@ -536,7 +539,7 @@ function limpiarModal() {
     if (resultados) resultados.style.display = 'none';
 }
 
-function analizarCondiciones() {
+async function analizarCondiciones() {
     const ubicacion = document.getElementById('ubicacion')?.value;
     const fechaInicio = document.getElementById('fechaInicio')?.value;
     const fechaFin = document.getElementById('fechaFin')?.value;
@@ -569,11 +572,240 @@ function analizarCondiciones() {
         return;
     }
 
-    const resultados = document.getElementById('resultadosAnalisis');
-    if (resultados) {
-        resultados.style.display = 'block';
+    // Obtener coordenadas del mapa (asumiendo que están en window.datosMapa)
+    let lat = window.latitudSeleccionada || -6.7714; // Default Chiclayo
+    let lon = window.longitudSeleccionada || -79.8405;
+
+    // Mostrar loading
+    const btnAnalizar = document.querySelector('.btn-analizar');
+    const textoOriginal = btnAnalizar.textContent;
+    btnAnalizar.textContent = '🔄 Analizando...';
+    btnAnalizar.disabled = true;
+
+    try {
+        console.log('🌦️ Llamando a API de predicción...');
+        console.log(`📍 Ubicación: ${lat}, ${lon}`);
+        console.log(`📅 Fechas: ${fechaInicio} → ${fechaFin}`);
+        
+        // Llamar a la API
+        const response = await fetch('/api/climate/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lat: lat,
+                lon: lon,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('✅ Predicción recibida:', result.data);
+            
+            // Mostrar si son datos simulados
+            if (result.data.nota && result.data.nota.includes('SIMULADO')) {
+                console.warn('⚠️ DATOS SIMULADOS:', result.data.nota);
+            }
+            
+            // Mostrar resultados
+            mostrarResultadosClimaticos(result.data, actividad);
+            
+            const resultados = document.getElementById('resultadosAnalisis');
+            if (resultados) {
+                resultados.style.display = 'block';
+                resultados.scrollIntoView({ behavior: 'smooth' });
+            }
+        } else {
+            console.error('❌ Error en API:', result.error);
+            alert('Error al obtener predicción: ' + result.error);
+        }
+    } catch (error) {
+        console.error('❌ Error en petición:', error);
+        alert('Error de conexión: ' + error.message);
+    } finally {
+        btnAnalizar.textContent = textoOriginal;
+        btnAnalizar.disabled = false;
+    }
+}
+
+function mostrarResultadosClimaticos(data, actividad) {
+    const predicciones = data.predicciones;
+    
+    // Actualizar título con nota si hay
+    const tituloResultados = document.querySelector('.resultados-title');
+    if (tituloResultados) {
+        let texto = 'Análisis de Riesgos Climáticos';
+        if (data.nota && data.nota.includes('SIMULADO')) {
+            texto += ' (⚠️ Datos Simulados)';
+        }
+        tituloResultados.textContent = texto;
+    }
+    
+    // Actualizar gráfico de temperatura
+    actualizarGraficoTemperatura(predicciones);
+    
+    // Actualizar íconos del clima por día
+    actualizarIconosClima(predicciones);
+    
+    // Actualizar recomendación
+    actualizarRecomendacion(predicciones, actividad, data.ubicacion);
+    
+    console.log('📊 Resultados mostrados en el modal');
+}
+
+function actualizarGraficoTemperatura(predicciones) {
+    const canvas = document.getElementById('chartTemperatura');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Destruir gráfico anterior si existe
+    if (window.chartTemperatura) {
+        window.chartTemperatura.destroy();
+    }
+    
+    const labels = predicciones.map(p => {
+        const fecha = new Date(p.fecha);
+        return fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    });
+    
+    const temperaturas = predicciones.map(p => p.temperatura.valor);
+    const tempMax = predicciones.map(p => p.temperatura.max);
+    const tempMin = predicciones.map(p => p.temperatura.min);
+    
+    // Crear gráfico con Chart.js si está disponible
+    if (typeof Chart !== 'undefined') {
+        window.chartTemperatura = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Máxima',
+                        data: tempMax,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Promedio',
+                        data: temperaturas,
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Mínima',
+                        data: tempMin,
+                        borderColor: '#45b7d1',
+                        backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Temperatura (°C)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
     } else {
-        console.error('No se encontró el elemento resultadosAnalisis');
+        console.warn('⚠️ Chart.js no disponible');
+    }
+}
+
+function actualizarIconosClima(predicciones) {
+    const weatherDays = document.querySelectorAll('.weather-day');
+    
+    predicciones.slice(0, 8).forEach((pred, index) => {
+        if (index < weatherDays.length) {
+            const dayElement = weatherDays[index];
+            
+            // Actualizar etiqueta del día
+            const dayLabel = dayElement.querySelector('.day-label');
+            if (dayLabel) {
+                const fecha = new Date(pred.fecha);
+                dayLabel.textContent = fecha.toLocaleDateString('es-ES', { weekday: 'short' });
+            }
+            
+            // Actualizar ícono según lluvia
+            const icon = dayElement.querySelector('.weather-icon');
+            if (icon) {
+                const lloverá = pred.precipitacion.lloverá;
+                const prob = pred.precipitacion.probabilidad;
+                
+                if (lloverá || prob > 50) {
+                    icon.innerHTML = '🌧️';
+                    icon.title = `Lluvia ${prob.toFixed(0)}%`;
+                } else if (prob > 30) {
+                    icon.innerHTML = '⛅';
+                    icon.title = `Parcialmente nublado ${prob.toFixed(0)}%`;
+                } else {
+                    icon.innerHTML = '☀️';
+                    icon.title = `Despejado ${prob.toFixed(0)}%`;
+                }
+            }
+        }
+    });
+}
+
+function actualizarRecomendacion(predicciones, actividad, ubicacion) {
+    const recomText = document.querySelector('.recommendation-text');
+    if (!recomText) return;
+    
+    // Analizar condiciones
+    const tempPromedio = predicciones.reduce((sum, p) => sum + p.temperatura.valor, 0) / predicciones.length;
+    const probLluviaMax = Math.max(...predicciones.map(p => p.precipitacion.probabilidad));
+    const diasLluvia = predicciones.filter(p => p.precipitacion.lloverá).length;
+    
+    let recomendacion = '';
+    let nivel = 'favorable'; // favorable, precaucion, desfavorable
+    
+    if (probLluviaMax > 70 || diasLluvia > 3) {
+        nivel = 'desfavorable';
+        recomendacion = `⚠️ Condiciones desfavorables: Alta probabilidad de lluvia (${probLluviaMax.toFixed(0)}%) durante ${diasLluvia} días. Se recomienda reprogramar la actividad de ${actividad} o llevar equipo impermeable adecuado.`;
+    } else if (probLluviaMax > 40 || diasLluvia > 1) {
+        nivel = 'precaucion';
+        recomendacion = `⚠️ Precaución: Probabilidad moderada de lluvia (${probLluviaMax.toFixed(0)}%). La actividad de ${actividad} es posible con precaución. Llevar equipo para lluvia y estar atento al clima.`;
+    } else {
+        nivel = 'favorable';
+        recomendacion = `✅ Condiciones favorables: Clima mayormente despejado con temperatura promedio de ${tempPromedio.toFixed(1)}°C. Ideal para ${actividad}. Probabilidad de lluvia baja (${probLluviaMax.toFixed(0)}%).`;
+    }
+    
+    recomText.textContent = recomendacion;
+    
+    // Cambiar color del cuadro según nivel
+    const recomBox = document.querySelector('.recommendation-box');
+    if (recomBox) {
+        if (nivel === 'desfavorable') {
+            recomBox.style.backgroundColor = '#fee';
+            recomBox.style.borderColor = '#fcc';
+        } else if (nivel === 'precaucion') {
+            recomBox.style.backgroundColor = '#fef9e7';
+            recomBox.style.borderColor = '#f9e79f';
+        } else {
+            recomBox.style.backgroundColor = '#efe';
+            recomBox.style.borderColor = '#cfc';
+        }
     }
 }
 

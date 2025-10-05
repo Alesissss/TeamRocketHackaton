@@ -144,6 +144,9 @@
 {% block script %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
     
@@ -302,6 +305,22 @@
         }
     });
 
+    // Función para calcular el centroide de un polígono
+    function calcularCentroide(puntos) {
+        let latSum = 0;
+        let lngSum = 0;
+        
+        puntos.forEach(punto => {
+            latSum += punto.lat;
+            lngSum += punto.lng;
+        });
+        
+        return {
+            lat: latSum / puntos.length,
+            lng: lngSum / puntos.length
+        };
+    }
+
     // Configurar buscador (opcional)
     try {
         const searchControl = L.Control.geocoder({
@@ -379,16 +398,7 @@
                 
                 // Configurar event listeners después de cargar el HTML
                 setTimeout(() => {
-                    if (typeof configurarEventListeners === 'function') {
-                        configurarEventListeners();
-                    }
-                    
-                    // Forzar configuración adicional
-                    if (typeof window.forceConfigurarEventListeners === 'function') {
-                        window.forceConfigurarEventListeners();
-                    }
-                    
-                    // Configurar event listeners adicionales para cerrar modal
+                    configurarEventListenersActividades();
                     configurarCierreModal();
                 }, 100);
                 
@@ -410,12 +420,32 @@
 
         modal.style.display = 'flex';
 
-        // Forzar configuración de event listeners
-        setTimeout(() => {
-            if (typeof window.forceConfigurarEventListeners === 'function') {
-                window.forceConfigurarEventListeners();
+        // Limpiar campos y estados previos
+        limpiarModalCompleto();
+
+        // Guardar coordenadas globalmente para la API
+        // Verificar si coordenadas es un objeto con lat/lng o un array
+        if (datosMapa.coordenadas) {
+            if (Array.isArray(datosMapa.coordenadas)) {
+                // Es un polígono, usar el centro
+                const centroide = calcularCentroide(datosMapa.coordenadas);
+                window.latitudSeleccionada = centroide.lat;
+                window.longitudSeleccionada = centroide.lng;
+            } else {
+                // Es un punto
+                window.latitudSeleccionada = datosMapa.coordenadas.lat;
+                window.longitudSeleccionada = datosMapa.coordenadas.lng;
             }
-        }, 100);
+        } else {
+            // Fallback
+            window.latitudSeleccionada = datosMapa.latitud || datosMapa.lat || -6.7714;
+            window.longitudSeleccionada = datosMapa.longitud || datosMapa.lon || -79.8405;
+        }
+        
+        console.log(`📍 Coordenadas guardadas: ${window.latitudSeleccionada}, ${window.longitudSeleccionada}`);
+
+        // Reconfigurar event listeners de actividades
+        configurarEventListenersActividades();
 
         // Rellenar los campos del modal
         setTimeout(() => {
@@ -493,6 +523,604 @@
         
         console.log('🔧 Event listeners del modal configurados');
     }
+
+    // Función para limpiar completamente el modal
+    function limpiarModalCompleto() {
+        // Limpiar campos de texto
+        const ubicacion = document.getElementById('ubicacion');
+        const fechaInicio = document.getElementById('fechaInicio');
+        const fechaFin = document.getElementById('fechaFin');
+        const actividadPersonalizada = document.getElementById('actividadPersonalizada');
+        
+        if (ubicacion) ubicacion.value = '';
+        if (fechaInicio) fechaInicio.value = '';
+        if (fechaFin) fechaFin.value = '';
+        if (actividadPersonalizada) actividadPersonalizada.value = '';
+        
+        // Limpiar selección de actividades
+        const activityBtns = document.querySelectorAll('.activity-btn');
+        activityBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.activity === 'otra') {
+                delete btn.dataset.actividadPersonalizada;
+            }
+        });
+        
+        // Ocultar resultados
+        const resultados = document.getElementById('resultadosAnalisis');
+        if (resultados) resultados.style.display = 'none';
+        
+        console.log('🧹 Modal limpiado completamente');
+    }
+
+    // Función para configurar event listeners de las actividades
+    function configurarEventListenersActividades() {
+        const activityBtns = document.querySelectorAll('.activity-btn');
+        
+        activityBtns.forEach(btn => {
+            // Remover event listeners anteriores clonando el elemento
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            // Agregar nuevo event listener
+            newBtn.addEventListener('click', function(e) {
+                // Si es el campo personalizado y se clickea el input, no hacer nada
+                if (e.target.tagName === 'INPUT') {
+                    return;
+                }
+                
+                // Remover active de todos
+                document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+                
+                // Agregar active al clickeado
+                newBtn.classList.add('active');
+                
+                // Si es actividad personalizada, enfocar el input
+                if (newBtn.dataset.activity === 'otra') {
+                    const input = newBtn.querySelector('input');
+                    if (input) {
+                        setTimeout(() => input.focus(), 50);
+                    }
+                }
+                
+                console.log('✅ Actividad seleccionada:', newBtn.dataset.activity);
+            });
+        });
+        
+        // Configurar input de actividad personalizada
+        const customInput = document.getElementById('actividadPersonalizada');
+        if (customInput) {
+            const customBtn = customInput.closest('.activity-btn');
+            
+            customInput.addEventListener('focus', function() {
+                if (customBtn) {
+                    document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+                    customBtn.classList.add('active');
+                }
+            });
+            
+            customInput.addEventListener('input', function() {
+                if (customBtn) {
+                    customBtn.dataset.actividadPersonalizada = this.value.trim();
+                }
+            });
+        }
+        
+        console.log('🔧 Event listeners de actividades configurados');
+    }
+
+    // ===== FUNCIÓN PARA EXPORTAR A PDF =====
+    window.exportarAPDF = async function() {
+        const btnExportar = document.querySelector('.btn-exportar');
+        const textoOriginal = btnExportar.innerHTML;
+        
+        try {
+            btnExportar.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="2" fill="none"/></svg> Generando PDF...';
+            btnExportar.disabled = true;
+            
+            console.log('📄 Iniciando exportación a PDF...');
+            
+            // Obtener el contenedor de resultados
+            const resultadosDiv = document.getElementById('resultadosAnalisis');
+            if (!resultadosDiv) {
+                alert('No hay resultados para exportar');
+                return;
+            }
+            
+            // Crear un contenedor temporal para el PDF
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.width = '800px';
+            pdfContainer.style.padding = '40px';
+            pdfContainer.style.backgroundColor = 'white';
+            pdfContainer.style.position = 'absolute';
+            pdfContainer.style.left = '-9999px';
+            document.body.appendChild(pdfContainer);
+            
+            // Obtener datos del formulario
+            const ubicacion = document.getElementById('ubicacion')?.value || 'Ubicación no especificada';
+            const fechaInicio = document.getElementById('fechaInicio')?.value || '';
+            const fechaFin = document.getElementById('fechaFin')?.value || '';
+            const actividadBtn = document.querySelector('.activity-btn.active');
+            let actividad = 'No especificada';
+            
+            if (actividadBtn) {
+                if (actividadBtn.dataset.activity === 'otra') {
+                    const input = actividadBtn.querySelector('input');
+                    actividad = input ? input.value : actividadBtn.dataset.actividadPersonalizada || 'Otra';
+                } else {
+                    const span = actividadBtn.querySelector('span');
+                    actividad = span ? span.textContent : actividadBtn.dataset.activity;
+                }
+            }
+            
+            // Construir el contenido del PDF
+            pdfContainer.innerHTML = `
+                <div style="font-family: Arial, sans-serif;">
+                    <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #7fb539; padding-bottom: 20px;">
+                        <h1 style="color: #7fb539; margin: 0 0 10px 0; font-size: 28px;">🌦️ Reporte Climático</h1>
+                        <p style="color: #666; margin: 0; font-size: 14px;">Predicción Meteorológica con ML</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📍 Información del Viaje</h2>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold; width: 150px;">Ubicación:</td>
+                                <td style="padding: 8px 0; color: #333;">${ubicacion}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Coordenadas:</td>
+                                <td style="padding: 8px 0; color: #333;">${window.latitudSeleccionada?.toFixed(6) || 'N/A'}, ${window.longitudSeleccionada?.toFixed(6) || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Fecha Inicio:</td>
+                                <td style="padding: 8px 0; color: #333;">${fechaInicio}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Fecha Fin:</td>
+                                <td style="padding: 8px 0; color: #333;">${fechaFin}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Actividad:</td>
+                                <td style="padding: 8px 0; color: #333;">${actividad}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div id="chartForPDF" style="margin: 25px 0;">
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📊 Temperatura Prevista</h2>
+                        <canvas id="tempChartPDF" width="720" height="300"></canvas>
+                    </div>
+                    
+                    <div style="margin: 25px 0;">
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">🌤️ Pronóstico Diario</h2>
+                        <div id="weatherDaysPDF"></div>
+                    </div>
+                    
+                    <div id="recomendacionPDF"></div>
+                    
+                    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #999; font-size: 11px;">
+                        <p>Generado el ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        <p>Modelo: XGBoost Gradient Boosting | Fuente: NASA MERRA-2</p>
+                    </div>
+                </div>
+            `;
+            
+            // Copiar el gráfico al contenedor temporal
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Recrear el gráfico en el canvas del PDF
+            if (window.chartTemperatura && typeof Chart !== 'undefined') {
+                const canvasPDF = document.getElementById('tempChartPDF');
+                const ctxPDF = canvasPDF.getContext('2d');
+                
+                // Clonar solo los datos necesarios
+                const chartData = window.chartTemperatura.data;
+                
+                new Chart(ctxPDF, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: chartData.datasets.map(ds => ({
+                            label: ds.label,
+                            data: ds.data,
+                            borderColor: ds.borderColor,
+                            backgroundColor: ds.backgroundColor,
+                            tension: 0.4,
+                            borderWidth: ds.borderWidth || 1
+                        }))
+                    },
+                    options: {
+                        responsive: false,
+                        animation: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '°C';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Copiar los días del clima
+            const weatherDaysPDF = document.getElementById('weatherDaysPDF');
+            const weatherDays = document.querySelectorAll('.weather-day');
+            let weatherHTML = '<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">';
+            
+            weatherDays.forEach(day => {
+                const label = day.querySelector('.day-label')?.textContent || '';
+                const icon = day.querySelector('.weather-icon')?.innerHTML || '☀️';
+                weatherHTML += `
+                    <div style="text-align: center; margin: 10px; min-width: 70px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${label}</div>
+                        <div style="font-size: 36px;">${icon}</div>
+                    </div>
+                `;
+            });
+            weatherHTML += '</div>';
+            weatherDaysPDF.innerHTML = weatherHTML;
+            
+            // Copiar la recomendación
+            const recomendacionPDF = document.getElementById('recomendacionPDF');
+            const recomendacionOriginal = document.querySelector('.recommendation-box');
+            if (recomendacionOriginal) {
+                const bgColor = recomendacionOriginal.style.backgroundColor || '#fef9e7';
+                const borderColor = recomendacionOriginal.style.borderColor || '#f9e79f';
+                const texto = recomendacionOriginal.querySelector('.recommendation-text')?.textContent || '';
+                
+                recomendacionPDF.innerHTML = `
+                    <div style="background-color: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 10px 0;">💡 Recomendación</h2>
+                        <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">${texto}</p>
+                    </div>
+                `;
+            }
+            
+            // Esperar a que todo se renderice
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Capturar el contenido con html2canvas
+            const canvas = await html2canvas(pdfContainer, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            });
+            
+            // Crear PDF con jsPDF
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 210; // A4 width in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            // Agregar páginas si el contenido es muy largo
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= 297; // A4 height in mm
+            
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= 297;
+            }
+            
+            // Guardar el PDF
+            const nombreArchivo = `reporte_climatico_${fechaInicio}_${fechaFin}.pdf`;
+            pdf.save(nombreArchivo);
+            
+            // Limpiar
+            document.body.removeChild(pdfContainer);
+            
+            console.log('✅ PDF generado exitosamente:', nombreArchivo);
+            
+            // Mostrar mensaje de éxito
+            alert('✅ PDF generado exitosamente: ' + nombreArchivo);
+            
+        } catch (error) {
+            console.error('❌ Error al generar PDF:', error);
+            alert('Error al generar PDF: ' + error.message);
+        } finally {
+            btnExportar.innerHTML = textoOriginal;
+            btnExportar.disabled = false;
+        }
+    };
+
+    // ===== FUNCIONES DEL PREDICTOR CLIMÁTICO (GLOBALES) =====
+    
+    window.analizarCondiciones = async function() {
+        const ubicacion = document.getElementById('ubicacion')?.value;
+        const fechaInicio = document.getElementById('fechaInicio')?.value;
+        const fechaFin = document.getElementById('fechaFin')?.value;
+
+        const actividadSeleccionada = document.querySelector('.activity-btn.active');
+        let actividad = '';
+
+        if (actividadSeleccionada) {
+            if (actividadSeleccionada.dataset.activity === 'otra') {
+                const inputEnBoton = actividadSeleccionada.querySelector('input');
+                if (inputEnBoton) {
+                    actividad = inputEnBoton.value.trim();
+                } else if (actividadSeleccionada.dataset.actividadPersonalizada) {
+                    actividad = actividadSeleccionada.dataset.actividadPersonalizada.trim();
+                }
+
+                if (!actividad) {
+                    alert('Por favor escribe tu actividad en el campo "Otra"');
+                    if (inputEnBoton) inputEnBoton.focus();
+                    return;
+                }
+            } else {
+                const spanActividad = actividadSeleccionada.querySelector('span');
+                actividad = spanActividad ? spanActividad.textContent : '';
+            }
+        }
+
+        if (!ubicacion || !fechaInicio || !fechaFin || !actividad) {
+            alert('Por favor completa todos los campos y selecciona una actividad');
+            return;
+        }
+
+        // Obtener coordenadas guardadas globalmente
+        let lat = window.latitudSeleccionada || -6.7714; // Default Chiclayo
+        let lon = window.longitudSeleccionada || -79.8405;
+
+        console.log(`📍 Usando coordenadas: ${lat}, ${lon}`);
+
+        // Mostrar loading
+        const btnAnalizar = document.querySelector('.btn-analizar');
+        const textoOriginal = btnAnalizar.textContent;
+        btnAnalizar.textContent = '🔄 Analizando...';
+        btnAnalizar.disabled = true;
+
+        try {
+            console.log('🌦️ Llamando a API de predicción...');
+            console.log(`📍 Ubicación: ${lat}, ${lon}`);
+            console.log(`📅 Fechas: ${fechaInicio} → ${fechaFin}`);
+            
+            // Llamar a la API
+            const response = await fetch('/api/climate/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    lat: lat,
+                    lon: lon,
+                    fecha_inicio: fechaInicio,
+                    fecha_fin: fechaFin
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('✅ Predicción recibida:', result.data);
+                
+                // Mostrar si son datos simulados
+                if (result.data.nota && result.data.nota.includes('SIMULADO')) {
+                    console.warn('⚠️ DATOS SIMULADOS:', result.data.nota);
+                }
+                
+                // Mostrar resultados
+                window.mostrarResultadosClimaticos(result.data, actividad);
+                
+                const resultados = document.getElementById('resultadosAnalisis');
+                if (resultados) {
+                    resultados.style.display = 'block';
+                    resultados.scrollIntoView({ behavior: 'smooth' });
+                }
+            } else {
+                console.error('❌ Error en API:', result.error);
+                alert('Error al obtener predicción: ' + result.error);
+            }
+        } catch (error) {
+            console.error('❌ Error en petición:', error);
+            alert('Error de conexión: ' + error.message);
+        } finally {
+            btnAnalizar.textContent = textoOriginal;
+            btnAnalizar.disabled = false;
+        }
+    };
+
+    window.mostrarResultadosClimaticos = function(data, actividad) {
+        const predicciones = data.predicciones;
+        
+        // Actualizar título con nota si hay
+        const tituloResultados = document.querySelector('.resultados-title');
+        if (tituloResultados) {
+            let texto = 'Análisis de Riesgos Climáticos';
+            if (data.nota && data.nota.includes('SIMULADO')) {
+                texto += ' (⚠️ Datos Simulados)';
+            }
+            tituloResultados.textContent = texto;
+        }
+        
+        // Actualizar gráfico de temperatura
+        window.actualizarGraficoTemperatura(predicciones);
+        
+        // Actualizar íconos del clima por día
+        window.actualizarIconosClima(predicciones);
+        
+        // Actualizar recomendación
+        window.actualizarRecomendacion(predicciones, actividad, data.ubicacion);
+        
+        console.log('📊 Resultados mostrados en el modal');
+    };
+
+    window.actualizarGraficoTemperatura = function(predicciones) {
+        const canvas = document.getElementById('chartTemperatura');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Destruir gráfico anterior si existe
+        if (window.chartTemperatura && typeof window.chartTemperatura.destroy === 'function') {
+            window.chartTemperatura.destroy();
+        }
+        
+        const labels = predicciones.map(p => {
+            const fecha = new Date(p.fecha);
+            return fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+        });
+        
+        const temperaturas = predicciones.map(p => p.temperatura.valor);
+        const tempMax = predicciones.map(p => p.temperatura.max);
+        const tempMin = predicciones.map(p => p.temperatura.min);
+        
+        // Crear gráfico con Chart.js si está disponible
+        if (typeof Chart !== 'undefined') {
+            window.chartTemperatura = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Máxima',
+                            data: tempMax,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Promedio',
+                            data: temperaturas,
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Mínima',
+                            data: tempMin,
+                            borderColor: '#45b7d1',
+                            backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Temperatura (°C)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        } else {
+            console.warn('⚠️ Chart.js no disponible');
+        }
+    };
+
+    window.actualizarIconosClima = function(predicciones) {
+        const weatherDays = document.querySelectorAll('.weather-day');
+        
+        predicciones.slice(0, 8).forEach((pred, index) => {
+            if (index < weatherDays.length) {
+                const dayElement = weatherDays[index];
+                
+                // Actualizar etiqueta del día
+                const dayLabel = dayElement.querySelector('.day-label');
+                if (dayLabel) {
+                    const fecha = new Date(pred.fecha);
+                    dayLabel.textContent = fecha.toLocaleDateString('es-ES', { weekday: 'short' });
+                }
+                
+                // Actualizar ícono según lluvia
+                const icon = dayElement.querySelector('.weather-icon');
+                if (icon) {
+                    const lloverá = pred.precipitacion.lloverá;
+                    const prob = pred.precipitacion.probabilidad;
+                    
+                    if (lloverá || prob > 50) {
+                        icon.innerHTML = '🌧️';
+                        icon.title = `Lluvia ${prob.toFixed(0)}%`;
+                    } else if (prob > 30) {
+                        icon.innerHTML = '⛅';
+                        icon.title = `Parcialmente nublado ${prob.toFixed(0)}%`;
+                    } else {
+                        icon.innerHTML = '☀️';
+                        icon.title = `Despejado ${prob.toFixed(0)}%`;
+                    }
+                }
+            }
+        });
+    };
+
+    window.actualizarRecomendacion = function(predicciones, actividad, ubicacion) {
+        const recomText = document.querySelector('.recommendation-text');
+        if (!recomText) return;
+        
+        // Analizar condiciones
+        const tempPromedio = predicciones.reduce((sum, p) => sum + p.temperatura.valor, 0) / predicciones.length;
+        const probLluviaMax = Math.max(...predicciones.map(p => p.precipitacion.probabilidad));
+        const diasLluvia = predicciones.filter(p => p.precipitacion.lloverá).length;
+        
+        let recomendacion = '';
+        let nivel = 'favorable'; // favorable, precaucion, desfavorable
+        
+        if (probLluviaMax > 70 || diasLluvia > 3) {
+            nivel = 'desfavorable';
+            recomendacion = `⚠️ Condiciones desfavorables: Alta probabilidad de lluvia (${probLluviaMax.toFixed(0)}%) durante ${diasLluvia} días. Se recomienda reprogramar la actividad de ${actividad} o llevar equipo impermeable adecuado.`;
+        } else if (probLluviaMax > 40 || diasLluvia > 1) {
+            nivel = 'precaucion';
+            recomendacion = `⚠️ Precaución: Probabilidad moderada de lluvia (${probLluviaMax.toFixed(0)}%). La actividad de ${actividad} es posible con precaución. Llevar equipo para lluvia y estar atento al clima.`;
+        } else {
+            nivel = 'favorable';
+            recomendacion = `✅ Condiciones favorables: Clima mayormente despejado con temperatura promedio de ${tempPromedio.toFixed(1)}°C. Ideal para ${actividad}. Probabilidad de lluvia baja (${probLluviaMax.toFixed(0)}%).`;
+        }
+        
+        recomText.textContent = recomendacion;
+        
+        // Cambiar color del cuadro según nivel
+        const recomBox = document.querySelector('.recommendation-box');
+        if (recomBox) {
+            if (nivel === 'desfavorable') {
+                recomBox.style.backgroundColor = '#fee';
+                recomBox.style.borderColor = '#fcc';
+            } else if (nivel === 'precaucion') {
+                recomBox.style.backgroundColor = '#fef9e7';
+                recomBox.style.borderColor = '#f9e79f';
+            } else {
+                recomBox.style.backgroundColor = '#efe';
+                recomBox.style.borderColor = '#cfc';
+            }
+        }
+    };
 
 </script>
 {% endblock %}
