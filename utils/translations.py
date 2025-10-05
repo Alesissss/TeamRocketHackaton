@@ -30,12 +30,7 @@ translations = {
         'jue': 'jue',
         'vie': 'vie',
         'Recomendación': 'Recomendación',
-        'Exportar PDF': 'Exportar PDF',
-        'Por favor completa todos los campos y selecciona una actividad': 'Por favor completa todos los campos y selecciona una actividad',
-        'Por favor escribe tu actividad en el campo "Otra"': 'Por favor escribe tu actividad en el campo "Otra"',
-        'Error al obtener predicción': 'Error al obtener predicción',
-        'Error de conexión': 'Error de conexión',
-        'Precaución: Altas condiciones climáticas podrían ser desfavorables para tu actividad en Chicaque, Colombia respecto a viajar solo o prepararse con equipos especializados.': 'Precaución: Altas condiciones climáticas podrían ser desfavorables para tu actividad en Chicaque, Colombia respecto a viajar solo o prepararse con equipos especializados.'
+        'Exportar PDF': 'Exportar PDF'
     },
     'en': {
         'Will it be rain on my parade?': 'Will it be rain on my parade?',
@@ -68,12 +63,7 @@ translations = {
         'jue': 'thu',
         'vie': 'fri',
         'Recomendación': 'Recommendation',
-        'Exportar PDF': 'Export PDF',
-        'Por favor completa todos los campos y selecciona una actividad': 'Please complete all fields and select an activity',
-        'Por favor escribe tu actividad en el campo "Otra"': 'Please write your activity in the "Other" field',
-        'Error al obtener predicción': 'Error fetching prediction',
-        'Error de conexión': 'Connection error',
-        'Precaución: Altas condiciones climáticas podrían ser desfavorables para tu actividad en Chicaque, Colombia respecto a viajar solo o prepararse con equipos especializados.': 'Caution: Severe weather conditions may be unfavorable for your activity in Chicaque, Colombia. Consider traveling with company or carrying specialized gear.'
+        'Exportar PDF': 'Export PDF'
     }
 }
 

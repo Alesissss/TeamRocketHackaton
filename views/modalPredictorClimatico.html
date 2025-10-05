@@ -460,26 +460,9 @@
 
 </style>
 
-<script type="application/json" id="alertTextsData">
-    {{ {
-        'completarCampos': _('Por favor completa todos los campos y selecciona una actividad'),
-        'escribirOtra': _('Por favor escribe tu actividad en el campo "Otra"'),
-        'errorPrediccion': _('Error al obtener predicción'),
-        'errorConexion': _('Error de conexión')
-    }|tojson }}
-</script>
-
 <script>
 const ACTIVITY_SELECTOR = '.activity-btn';
 let escapeListenerRegistrado = false;
-
-const alertTextsElement = document.getElementById('alertTextsData');
-const TEXTOS_ALERTA = alertTextsElement ? JSON.parse(alertTextsElement.textContent) : {
-    completarCampos: 'Por favor completa todos los campos y selecciona una actividad',
-    escribirOtra: 'Por favor escribe tu actividad en el campo "Otra"',
-    errorPrediccion: 'Error al obtener predicción',
-    errorConexion: 'Error de conexión'
-};
 
 function cerrarModal() {
     if (typeof window.cerrarModalPredictor === 'function') {
@@ -569,7 +552,7 @@ async function analizarCondiciones() {
             }
 
             if (!actividad) {
-                alert(TEXTOS_ALERTA.escribirOtra);
+                alert('Please write your activity in the "Other" field');
                 if (inputEnBoton) inputEnBoton.focus();
                 return;
             }
@@ -580,7 +563,7 @@ async function analizarCondiciones() {
     }
 
     if (!ubicacion || !fechaInicio || !fechaFin || !actividad) {
-        alert(TEXTOS_ALERTA.completarCampos);
+        alert('Please complete all fields and select an activity');
         return;
     }
 
@@ -616,7 +599,6 @@ async function analizarCondiciones() {
         const result = await response.json();
 
         if (result.success) {
-            console.log('✅ Predicción recibida:', result.data);
             
             // Mostrar si son datos simulados
             if (result.data.nota && result.data.nota.includes('SIMULADO')) {
@@ -633,11 +615,11 @@ async function analizarCondiciones() {
             }
         } else {
             console.error('❌ Error en API:', result.error);
-            alert(`${TEXTOS_ALERTA.errorPrediccion}: ${result.error}`);
+            alert(`Error obtaining prediction: ${result.error}`);
         }
     } catch (error) {
         console.error('❌ Error en petición:', error);
-        alert(`${TEXTOS_ALERTA.errorConexion}: ${error.message}`);
+        alert(`Connection error: ${error.message}`);
     } finally {
         btnAnalizar.textContent = textoOriginal;
         btnAnalizar.disabled = false;
@@ -697,14 +679,14 @@ function actualizarGraficoTemperatura(predicciones) {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Máxima',
+                        label: 'Max',
                         data: tempMax,
                         borderColor: '#ff6b6b',
                         backgroundColor: 'rgba(255, 107, 107, 0.1)',
                         tension: 0.4
                     },
                     {
-                        label: 'Promedio',
+                        label: 'Avg',
                         data: temperaturas,
                         borderColor: '#4ecdc4',
                         backgroundColor: 'rgba(78, 205, 196, 0.1)',
@@ -712,7 +694,7 @@ function actualizarGraficoTemperatura(predicciones) {
                         borderWidth: 2
                     },
                     {
-                        label: 'Mínima',
+                        label: 'Min',
                         data: tempMin,
                         borderColor: '#45b7d1',
                         backgroundColor: 'rgba(69, 183, 209, 0.1)',
@@ -730,7 +712,7 @@ function actualizarGraficoTemperatura(predicciones) {
                     },
                     title: {
                         display: true,
-                        text: 'Temperatura (°C)'
+                        text: 'Temperature (°C)'
                     }
                 },
                 scales: {
@@ -767,13 +749,13 @@ function actualizarIconosClima(predicciones) {
                 
                 if (lloverá || prob > 50) {
                     icon.innerHTML = '🌧️';
-                    icon.title = `Lluvia ${prob.toFixed(0)}%`;
+                    icon.title = `Rain ${prob.toFixed(0)}%`;
                 } else if (prob > 30) {
                     icon.innerHTML = '⛅';
-                    icon.title = `Parcialmente nublado ${prob.toFixed(0)}%`;
+                    icon.title = `Partially cloudy ${prob.toFixed(0)}%`;
                 } else {
                     icon.innerHTML = '☀️';
-                    icon.title = `Despejado ${prob.toFixed(0)}%`;
+                    icon.title = `Clear ${prob.toFixed(0)}%`;
                 }
             }
         }
@@ -792,15 +774,16 @@ function actualizarRecomendacion(predicciones, actividad, ubicacion) {
     let recomendacion = '';
     let nivel = 'favorable'; // favorable, precaucion, desfavorable
     
+    //traducir a ingles
     if (probLluviaMax > 70 || diasLluvia > 3) {
         nivel = 'desfavorable';
-        recomendacion = `⚠️ Condiciones desfavorables: Alta probabilidad de lluvia (${probLluviaMax.toFixed(0)}%) durante ${diasLluvia} días. Se recomienda reprogramar la actividad de ${actividad} o llevar equipo impermeable adecuado.`;
+        recomendacion = `⚠️ Unfavorable conditions: High probability of rain (${probLluviaMax.toFixed(0)}%) for ${diasLluvia} days. It is recommended to reschedule the activity of ${actividad} or bring suitable waterproof equipment.`;
     } else if (probLluviaMax > 40 || diasLluvia > 1) {
         nivel = 'precaucion';
-        recomendacion = `⚠️ Precaución: Probabilidad moderada de lluvia (${probLluviaMax.toFixed(0)}%). La actividad de ${actividad} es posible con precaución. Llevar equipo para lluvia y estar atento al clima.`;
+        recomendacion = `⚠️ Caution: Moderate probability of rain (${probLluviaMax.toFixed(0)}%). The activity of ${actividad} is possible with caution. Bring rain gear and stay alert to the weather.`;
     } else {
         nivel = 'favorable';
-        recomendacion = `✅ Condiciones favorables: Clima mayormente despejado con temperatura promedio de ${tempPromedio.toFixed(1)}°C. Ideal para ${actividad}. Probabilidad de lluvia baja (${probLluviaMax.toFixed(0)}%).`;
+        recomendacion = `✅ Favorable conditions: Mostly clear weather with an average temperature of ${tempPromedio.toFixed(1)}°C. Ideal for ${actividad}. Low probability of rain (${probLluviaMax.toFixed(0)}%).`;
     }
     
     recomText.textContent = recomendacion;
@@ -824,7 +807,7 @@ function actualizarRecomendacion(predicciones, actividad, ubicacion) {
 function configurarEventListeners() {
     const modalOverlay = document.getElementById('modalPredictorClimatico');
     if (!modalOverlay) {
-        console.warn('No se encontró el modal del predictor climático');
+        console.warn('The climate predictor modal was not found.');
         return;
     }
 
