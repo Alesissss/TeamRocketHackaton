@@ -2,8 +2,6 @@
 Flask
 Flask-Babel
 pymysql
-PyJWT
-argon2-cffi
 pandas
 numpy
 seaborn
@@ -11,6 +9,12 @@ matplotlib
 requests
 scikit-learn
 joblib
+xarray
+earthaccess
+dask
+netCDF4
+fsspec
+aiohttp
 # $ pip install -r requirements.txt
 
 # python -m pip install --upgrade pip setuptools wheel

@@ -16,7 +16,7 @@ app.config['LANGUAGES'] = {
     'en': 'English',
     'es': 'Español'
 }
-app.config['BABEL_DEFAULT_LOCALE'] = 'es'
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_DEFAULT_TIMEZONE'] = 'UTC'
 
 babel = Babel()

@@ -8,9 +8,9 @@
         <button class="modal-close" onclick="cerrarModalPredictor()">&times;</button>
         
         <!-- Encabezado -->
-        <div class="modal-header">
-            <h2 style="display: block; width: 100%;">Predictor Climático</h2>
-            <p style="display: block; width: 100%;" class="modal-subtitle">Planifica tu aventura con confianza</p>
+        <div class="modal-header mt-4">
+            <h2 style="display: block; width: 100%;">{{ _('Predictor Climático') }}</h2>
+            <p style="display: block; width: 100%;" class="modal-subtitle">{{ _('Planifica tu aventura con confianza') }}</p>
         </div>
 
         <!-- Contenido del modal -->
@@ -19,30 +19,24 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>
-                        <svg class="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M8 0a8 8 0 100 16A8 8 0 008 0z"/>
-                        </svg>
-                        Ubicación
+                        <img src="./uploads/pin_drop_24dp.png" alt="Icono de ubicación" class="input-icon">
+                        {{ _('Ubicación') }}
                     </label>
                     <input type="text" id="ubicacion" placeholder="Ubicación" class="form-input" readonly>
                 </div>
 
                 <div class="form-group">
                     <label>
-                        <svg class="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M3 0h10a1 1 0 011 1v14a1 1 0 01-1 1H3a1 1 0 01-1-1V1a1 1 0 011-1z"/>
-                        </svg>
-                        Fecha de inicio
+                        <img src="./uploads/date_range_24dp.png" alt="Icono de calendario" class="input-icon">
+                        {{ _('Fecha de inicio') }}
                     </label>
                     <input type="date" id="fechaInicio" placeholder="Fecha de inicio" class="form-input">
                 </div>
 
                 <div class="form-group">
                     <label>
-                        <svg class="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M3 0h10a1 1 0 011 1v14a1 1 0 01-1 1H3a1 1 0 01-1-1V1a1 1 0 011-1z"/>
-                        </svg>
-                        Ubicación / Fecha del fin
+                        <img src="./uploads/date_range_24dp.png" alt="Icono de ubicación" class="input-icon">
+                        {{ _('Fecha del fin') }}
                     </label>
                     <input type="date" id="fechaFin" placeholder="Fecha del fin" class="form-input">
                 </div>
@@ -50,42 +44,44 @@
 
             <!-- Botones de actividad -->
             <div class="activity-grid">
-                <button class="activity-btn" data-activity="senderismo">
+                <button class="activity-btn" data-activity="hiking">
                     <div class="activity-icon">
-                        <!-- Aquí van tus íconos -->
+                        <img src="./uploads/icon_hiking.png" alt="Icon hiking">
                     </div>
-                    <span>Senderismo</span>
+                    <span>{{ _('Senderismo') }}</span>
                 </button>
 
-                <button class="activity-btn" data-activity="pesca">
+                <button class="activity-btn" data-activity="Camping">
                     <div class="activity-icon">
-                        <!-- Aquí van tus íconos -->
+                        <img src="./uploads/icon_camping.png" alt="Icon camping">
                     </div>
-                    <span>Camping</span>
+                    <span>{{ _('Campamento') }}</span>
                 </button>
 
-                <button class="activity-btn" data-activity="playa">
+                <button class="activity-btn" data-activity="beach">
                     <div class="activity-icon">
-                        <!-- Aquí van tus íconos -->
+                        <img src="./uploads/icon_beach.png" alt="Icon beach">
                     </div>
-                    <span>Playa</span>
+                    <span>{{ _('Playa') }}</span>
                 </button>
 
                 <div class="activity-btn activity-custom" data-activity="otra" role="button" tabindex="0">
-                    <div class="activity-icon">✏️</div>
+                    <div class="activity-icon">
+                        <img src="./uploads/icon_custom.png" alt="Icon custom">
+                    </div>
                     <input type="text" id="actividadPersonalizada" name="actividadPersonalizada"
-                        placeholder="Escribe tu actividad" autocomplete="off" />
+                        placeholder="{{ _('Escribe tu actividad') }}" autocomplete="off" />
                 </div>
             </div>
 
             <!-- Botón analizar -->
             <button class="btn-analizar" onclick="analizarCondiciones()">
-                Analiza las condiciones climáticas
+                {{ _('Analiza las condiciones climáticas') }}
             </button>
 
             <!-- Sección de resultados (inicialmente oculta) -->
             <div id="resultadosAnalisis" class="resultados-section" style="display: none;">
-                <h3 class="resultados-title">Análisis de Riesgos Climáticos</h3>
+                <h3 class="resultados-title">{{ _('Análisis de Riesgos Climáticos') }}</h3>
 
                 <!-- Gráfica de temperatura -->
                 <div class="chart-container">
@@ -95,43 +91,43 @@
                 <!-- Días de la semana con íconos del clima -->
                 <div class="weather-days">
                     <div class="weather-day">
-                        <span class="day-label">sáb</span>
+                        <span class="day-label">{{ _('sáb') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
                     </div>
                     <div class="weather-day">
-                        <span class="day-label">dom</span>
+                        <span class="day-label">{{ _('dom') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
                     </div>
                     <div class="weather-day">
-                        <span class="day-label">lun</span>
+                        <span class="day-label">{{ _('lun') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
                     </div>
                     <div class="weather-day">
-                        <span class="day-label">mar</span>
+                        <span class="day-label">{{ _('mar') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
                     </div>
                     <div class="weather-day">
-                        <span class="day-label">mié</span>
+                        <span class="day-label">{{ _('mié') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
                     </div>
                     <div class="weather-day">
-                        <span class="day-label">jue</span>
+                        <span class="day-label">{{ _('jue') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
                     </div>
                     <div class="weather-day">
-                        <span class="day-label">vie</span>
+                        <span class="day-label">{{ _('vie') }}</span>
                         <div class="weather-icon">
                             <!-- Ícono clima -->
                         </div>
@@ -150,10 +146,10 @@
                         <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10 0a10 10 0 100 20 10 10 0 000-20zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
                         </svg>
-                        <span class="recommendation-title">Recomendación</span>
+                        <span class="recommendation-title">{{ _('Recomendación') }}</span>
                     </div>
                     <p class="recommendation-text">
-                        Precaución: Altas condiciones climáticas podrían ser desfavorables para tu actividad en Chicaque, Colombia respecto a viajar solo o prepararse con equipos especializados.
+                        {{ _('Precaución: Altas condiciones climáticas podrían ser desfavorables para tu actividad en Chicaque, Colombia respecto a viajar solo o prepararse con equipos especializados.') }}
                     </p>
                 </div>
 
@@ -162,7 +158,7 @@
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 0L4 4h3v8h2V4h3L8 0zm-6 14h12v2H2v-2z"/>
                     </svg>
-                    Exportar PDF
+                    {{ _('Exportar PDF') }}
                 </button>
             </div>
         </div>
@@ -231,8 +227,7 @@
 }
 
 .modal-header .modal-subtitle {
-  margin-top: 0.3rem;
-  color: #777;
+  color: #000000;
   font-size: 1rem;
 }
 
@@ -465,9 +460,24 @@
 
 </style>
 
+<div id="alertTextSource"
+    data-completar-campos="{{ _('Por favor completa todos los campos y selecciona una actividad') }}"
+    data-escribir-otra="{{ _('Por favor escribe tu actividad en el campo "Otra"') }}"
+    data-error-prediccion="{{ _('Error al obtener predicción') }}"
+    data-error-conexion="{{ _('Error de conexión') }}"
+    style="display: none;"></div>
+
 <script>
 const ACTIVITY_SELECTOR = '.activity-btn';
 let escapeListenerRegistrado = false;
+
+const alertTextsElement = document.getElementById('alertTextSource');
+const TEXTOS_ALERTA = {
+    completarCampos: alertTextsElement?.dataset.completarCampos || 'Por favor completa todos los campos y selecciona una actividad',
+    escribirOtra: alertTextsElement?.dataset.escribirOtra || 'Por favor escribe tu actividad en el campo "Otra"',
+    errorPrediccion: alertTextsElement?.dataset.errorPrediccion || 'Error al obtener predicción',
+    errorConexion: alertTextsElement?.dataset.errorConexion || 'Error de conexión'
+};
 
 function cerrarModal() {
     if (typeof window.cerrarModalPredictor === 'function') {
@@ -557,7 +567,7 @@ async function analizarCondiciones() {
             }
 
             if (!actividad) {
-                alert('Por favor escribe tu actividad en el campo "Otra"');
+                alert(TEXTOS_ALERTA.escribirOtra);
                 if (inputEnBoton) inputEnBoton.focus();
                 return;
             }
@@ -568,7 +578,7 @@ async function analizarCondiciones() {
     }
 
     if (!ubicacion || !fechaInicio || !fechaFin || !actividad) {
-        alert('Por favor completa todos los campos y selecciona una actividad');
+        alert(TEXTOS_ALERTA.completarCampos);
         return;
     }
 
@@ -621,11 +631,11 @@ async function analizarCondiciones() {
             }
         } else {
             console.error('❌ Error en API:', result.error);
-            alert('Error al obtener predicción: ' + result.error);
+            alert(`${TEXTOS_ALERTA.errorPrediccion}: ${result.error}`);
         }
     } catch (error) {
         console.error('❌ Error en petición:', error);
-        alert('Error de conexión: ' + error.message);
+        alert(`${TEXTOS_ALERTA.errorConexion}: ${error.message}`);
     } finally {
         btnAnalizar.textContent = textoOriginal;
         btnAnalizar.disabled = false;
@@ -638,7 +648,7 @@ function mostrarResultadosClimaticos(data, actividad) {
     // Actualizar título con nota si hay
     const tituloResultados = document.querySelector('.resultados-title');
     if (tituloResultados) {
-        let texto = 'Análisis de Riesgos Climáticos';
+        let texto = '{{ _("Análisis de Riesgos Climáticos") }}';
         if (data.nota && data.nota.includes('SIMULADO')) {
             texto += ' (⚠️ Datos Simulados)';
         }

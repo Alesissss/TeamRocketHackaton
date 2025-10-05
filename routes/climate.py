@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 
 # Importar predictor
 try:
-    from weather_predictor import ImprovedWeatherPredictor
+    from models.weather_predictor import ImprovedWeatherPredictor
     PREDICTOR_AVAILABLE = True
 except Exception as e:
     print(f"⚠️ No se pudo importar predictor: {e}")
