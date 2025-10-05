@@ -460,23 +460,25 @@
 
 </style>
 
-<div id="alertTextSource"
-    data-completar-campos="{{ _('Por favor completa todos los campos y selecciona una actividad') }}"
-    data-escribir-otra="{{ _('Por favor escribe tu actividad en el campo "Otra"') }}"
-    data-error-prediccion="{{ _('Error al obtener predicción') }}"
-    data-error-conexion="{{ _('Error de conexión') }}"
-    style="display: none;"></div>
+<script type="application/json" id="alertTextsData">
+    {{ {
+        'completarCampos': _('Por favor completa todos los campos y selecciona una actividad'),
+        'escribirOtra': _('Por favor escribe tu actividad en el campo "Otra"'),
+        'errorPrediccion': _('Error al obtener predicción'),
+        'errorConexion': _('Error de conexión')
+    }|tojson }}
+</script>
 
 <script>
 const ACTIVITY_SELECTOR = '.activity-btn';
 let escapeListenerRegistrado = false;
 
-const alertTextsElement = document.getElementById('alertTextSource');
-const TEXTOS_ALERTA = {
-    completarCampos: alertTextsElement?.dataset.completarCampos || 'Por favor completa todos los campos y selecciona una actividad',
-    escribirOtra: alertTextsElement?.dataset.escribirOtra || 'Por favor escribe tu actividad en el campo "Otra"',
-    errorPrediccion: alertTextsElement?.dataset.errorPrediccion || 'Error al obtener predicción',
-    errorConexion: alertTextsElement?.dataset.errorConexion || 'Error de conexión'
+const alertTextsElement = document.getElementById('alertTextsData');
+const TEXTOS_ALERTA = alertTextsElement ? JSON.parse(alertTextsElement.textContent) : {
+    completarCampos: 'Por favor completa todos los campos y selecciona una actividad',
+    escribirOtra: 'Por favor escribe tu actividad en el campo "Otra"',
+    errorPrediccion: 'Error al obtener predicción',
+    errorConexion: 'Error de conexión'
 };
 
 function cerrarModal() {
@@ -648,7 +650,7 @@ function mostrarResultadosClimaticos(data, actividad) {
     // Actualizar título con nota si hay
     const tituloResultados = document.querySelector('.resultados-title');
     if (tituloResultados) {
-        let texto = '{{ _("Análisis de Riesgos Climáticos") }}';
+        let texto = 'Análisis de Riesgos Climáticos';
         if (data.nota && data.nota.includes('SIMULADO')) {
             texto += ' (⚠️ Datos Simulados)';
         }
