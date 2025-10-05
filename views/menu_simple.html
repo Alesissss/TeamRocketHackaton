@@ -657,51 +657,51 @@
             pdfContainer.innerHTML = `
                 <div style="font-family: Arial, sans-serif;">
                     <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #7fb539; padding-bottom: 20px;">
-                        <h1 style="color: #7fb539; margin: 0 0 10px 0; font-size: 28px;">🌦️ Reporte Climático</h1>
-                        <p style="color: #666; margin: 0; font-size: 14px;">Predicción Meteorológica con ML</p>
+                        <h1 style="color: #7fb539; margin: 0 0 10px 0; font-size: 28px;">🌦️ Climate Report</h1>
+                        <p style="color: #666; margin: 0; font-size: 14px;">Weather Forecasting with ML</p>
                     </div>
                     
                     <div style="margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
-                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📍 Información del Viaje</h2>
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📍 Travel Information</h2>
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
-                                <td style="padding: 8px 0; color: #666; font-weight: bold; width: 150px;">Ubicación:</td>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold; width: 150px;">Location:</td>
                                 <td style="padding: 8px 0; color: #333;">${ubicacion}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Coordenadas:</td>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Coordinates:</td>
                                 <td style="padding: 8px 0; color: #333;">${window.latitudSeleccionada?.toFixed(6) || 'N/A'}, ${window.longitudSeleccionada?.toFixed(6) || 'N/A'}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Fecha Inicio:</td>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Start Date:</td>
                                 <td style="padding: 8px 0; color: #333;">${fechaInicio}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Fecha Fin:</td>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">End Date:</td>
                                 <td style="padding: 8px 0; color: #333;">${fechaFin}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Actividad:</td>
+                                <td style="padding: 8px 0; color: #666; font-weight: bold;">Activity:</td>
                                 <td style="padding: 8px 0; color: #333;">${actividad}</td>
                             </tr>
                         </table>
                     </div>
                     
                     <div id="chartForPDF" style="margin: 25px 0;">
-                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📊 Temperatura Prevista</h2>
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📊 Expected temperature</h2>
                         <canvas id="tempChartPDF" width="720" height="300"></canvas>
                     </div>
                     
                     <div style="margin: 25px 0;">
-                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">🌤️ Pronóstico Diario</h2>
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">🌤️ Daily Forecast</h2>
                         <div id="weatherDaysPDF"></div>
                     </div>
                     
                     <div id="recomendacionPDF"></div>
                     
                     <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #999; font-size: 11px;">
-                        <p>Generado el ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                        <p>Modelo: XGBoost Gradient Boosting | Fuente: NASA MERRA-2</p>
+                        <p style="color: #000000;">Generated on ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        <p style="color: #000000;">Model: XGBoost Gradient Boosting | Source: NASA MERRA-2</p>
                     </div>
                 </div>
             `;
@@ -784,7 +784,7 @@
                 
                 recomendacionPDF.innerHTML = `
                     <div style="background-color: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 8px; padding: 20px; margin: 25px 0;">
-                        <h2 style="color: #333; font-size: 18px; margin: 0 0 10px 0;">💡 Recomendación</h2>
+                        <h2 style="color: #333; font-size: 18px; margin: 0 0 10px 0;">💡 Recommendation</h2>
                         <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">${texto}</p>
                     </div>
                 `;
