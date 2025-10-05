@@ -21,7 +21,7 @@
                         </svg>
                         Ubicación
                     </label>
-                    <input type="text" id="ubicacion" placeholder="Ubicación" class="form-input">
+                    <input type="text" id="ubicacion" placeholder="Ubicación" class="form-input" readonly>
                 </div>
 
                 <div class="form-group">
@@ -58,7 +58,7 @@
                     <div class="activity-icon">
                         <!-- Aquí van tus íconos -->
                     </div>
-                    <span>Pesca</span>
+                    <span>Camping</span>
                 </button>
 
                 <button class="activity-btn" data-activity="playa">
@@ -68,12 +68,11 @@
                     <span>Playa</span>
                 </button>
 
-                <button class="activity-btn" data-activity="otra">
-                    <div class="activity-icon">
-                        <!-- Aquí van tus íconos -->
-                    </div>
-                    <span>Otra</span>
-                </button>
+                <div class="activity-btn activity-custom" data-activity="otra" role="button" tabindex="0">
+                    <div class="activity-icon">✏️</div>
+                    <input type="text" id="actividadPersonalizada" name="actividadPersonalizada"
+                        placeholder="Escribe tu actividad" autocomplete="off" />
+                </div>
             </div>
 
             <!-- Botón analizar -->
@@ -318,6 +317,25 @@
     color: #1a1a1a;
 }
 
+.activity-custom {
+    cursor: text;
+}
+
+.activity-custom input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 13px;
+    color: #1a1a1a;
+    outline: none;
+    padding: 6px 4px;
+}
+
+.activity-custom input::placeholder {
+    color: #9ca3af;
+}
+
 /* Botón analizar */
 .btn-analizar {
     width: 100%;
@@ -441,16 +459,17 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
 </style>
 
 <script>
-// Función para cerrar modal (compatible con función global)
+const ACTIVITY_SELECTOR = '.activity-btn';
+let escapeListenerRegistrado = false;
+
 function cerrarModal() {
     if (typeof window.cerrarModalPredictor === 'function') {
         window.cerrarModalPredictor();
     } else {
-        // Fallback si no existe la función global
-        console.log('Cerrando modal...');
         const modal = document.getElementById('modalPredictorClimatico');
         if (modal) {
             modal.style.display = 'none';
@@ -458,78 +477,183 @@ function cerrarModal() {
     }
 }
 
-// Alias para compatibilidad
 window.cerrarModal = cerrarModal;
 
-// Función para analizar condiciones
+function seleccionarActividad(actividad, boton) {
+    const allBtns = document.querySelectorAll(ACTIVITY_SELECTOR);
+    allBtns.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.activity === 'otra') {
+            const inputOtra = btn.querySelector('input');
+            if (inputOtra) {
+                btn.dataset.actividadPersonalizada = inputOtra.value.trim();
+            }
+        }
+    });
+
+    if (!boton) {
+        return;
+    }
+
+    boton.classList.add('active');
+
+    if (actividad === 'otra') {
+        const input = boton.querySelector('input');
+        if (input) {
+            boton.dataset.actividadPersonalizada = input.value.trim();
+            setTimeout(() => {
+                if (document.activeElement !== input) {
+                    input.focus();
+                }
+                input.select();
+            }, 50);
+        }
+    }
+}
+
+function limpiarModal() {
+    const ubicacion = document.getElementById('ubicacion');
+    const fechaInicio = document.getElementById('fechaInicio');
+    const fechaFin = document.getElementById('fechaFin');
+
+    if (ubicacion) ubicacion.value = '';
+    if (fechaInicio) fechaInicio.value = '';
+    if (fechaFin) fechaFin.value = '';
+
+    const allBtns = document.querySelectorAll(ACTIVITY_SELECTOR);
+    allBtns.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.activity === 'otra') {
+            const input = btn.querySelector('input');
+            if (input) {
+                input.value = '';
+            }
+            delete btn.dataset.actividadPersonalizada;
+        }
+    });
+
+    const resultados = document.getElementById('resultadosAnalisis');
+    if (resultados) resultados.style.display = 'none';
+}
+
 function analizarCondiciones() {
-    console.log('Iniciando análisis...');
-    
-    // Obtener valores
     const ubicacion = document.getElementById('ubicacion')?.value;
     const fechaInicio = document.getElementById('fechaInicio')?.value;
     const fechaFin = document.getElementById('fechaFin')?.value;
-    
-    console.log('Datos:', { ubicacion, fechaInicio, fechaFin });
-    
-    if (!ubicacion || !fechaInicio || !fechaFin) {
-        alert('Por favor completa todos los campos');
+
+    const actividadSeleccionada = document.querySelector(`${ACTIVITY_SELECTOR}.active`);
+    let actividad = '';
+
+    if (actividadSeleccionada) {
+        if (actividadSeleccionada.dataset.activity === 'otra') {
+            const inputEnBoton = actividadSeleccionada.querySelector('input');
+            if (inputEnBoton) {
+                actividad = inputEnBoton.value.trim();
+            } else if (actividadSeleccionada.dataset.actividadPersonalizada) {
+                actividad = actividadSeleccionada.dataset.actividadPersonalizada.trim();
+            }
+
+            if (!actividad) {
+                alert('Por favor escribe tu actividad en el campo "Otra"');
+                if (inputEnBoton) inputEnBoton.focus();
+                return;
+            }
+        } else {
+            const spanActividad = actividadSeleccionada.querySelector('span');
+            actividad = spanActividad ? spanActividad.textContent : '';
+        }
+    }
+
+    if (!ubicacion || !fechaInicio || !fechaFin || !actividad) {
+        alert('Por favor completa todos los campos y selecciona una actividad');
         return;
     }
-    
-    // Mostrar resultados
+
     const resultados = document.getElementById('resultadosAnalisis');
     if (resultados) {
         resultados.style.display = 'block';
-        console.log('Resultados mostrados');
     } else {
         console.error('No se encontró el elemento resultadosAnalisis');
     }
 }
 
-// Configurar event listeners cuando el modal se carga
 function configurarEventListeners() {
-    console.log('Configurando event listeners...');
-    
-    // Event listener para cerrar con click fuera del modal
-    const modal = document.getElementById('modalPredictorClimatico');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                console.log('Click fuera del modal');
-                cerrarModal();
-            }
-        });
-        
-        // Event listener para tecla Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display !== 'none') {
-                console.log('Tecla Escape presionada');
-                cerrarModal();
-            }
-        });
+    const modalOverlay = document.getElementById('modalPredictorClimatico');
+    if (!modalOverlay) {
+        console.warn('No se encontró el modal del predictor climático');
+        return;
     }
-    
-    // Event listeners para botones de actividad
-    const activityBtns = document.querySelectorAll('.activity-btn');
-    activityBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            console.log('Actividad seleccionada:', this.dataset.activity);
-            activityBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+
+    if (!modalOverlay.dataset.listenersInitialized) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                cerrarModal();
+                return;
+            }
+
+            const activityBtn = e.target.closest(ACTIVITY_SELECTOR);
+            if (activityBtn && modalOverlay.contains(activityBtn)) {
+                e.preventDefault();
+                seleccionarActividad(activityBtn.dataset.activity, activityBtn);
+            }
         });
-    });
-    
-    console.log('Event listeners configurados');
+
+        modalOverlay.dataset.listenersInitialized = 'true';
+    }
+
+    if (!escapeListenerRegistrado) {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('modalPredictorClimatico');
+                if (overlay && overlay.style.display !== 'none') {
+                    cerrarModal();
+                }
+            }
+        });
+        escapeListenerRegistrado = true;
+    }
+
+    const customActivityBtn = modalOverlay.querySelector(`${ACTIVITY_SELECTOR}[data-activity="otra"]`);
+    const customActivityInput = customActivityBtn ? customActivityBtn.querySelector('input') : null;
+
+    if (customActivityBtn && !customActivityBtn.dataset.keyboardListener) {
+        customActivityBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                seleccionarActividad('otra', customActivityBtn);
+            }
+        });
+        customActivityBtn.dataset.keyboardListener = 'true';
+    }
+
+    if (customActivityInput && !customActivityInput.dataset.listenersInitialized) {
+        customActivityInput.addEventListener('focus', () => {
+            seleccionarActividad('otra', customActivityBtn);
+        });
+
+        customActivityInput.addEventListener('input', function() {
+            customActivityBtn.dataset.actividadPersonalizada = this.value.trim();
+        });
+
+        customActivityInput.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+        customActivityInput.dataset.listenersInitialized = 'true';
+    }
 }
 
-// Inicializar cuando el contenido se carga
-setTimeout(configurarEventListeners, 100);
-
-// También configurar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', configurarEventListeners);
 } else {
     configurarEventListeners();
 }
+
+window.forceConfigurarEventListeners = function() {
+    setTimeout(configurarEventListeners, 50);
+};
+
+window.limpiarModal = limpiarModal;
+window.seleccionarActividad = seleccionarActividad;
+window.analizarCondiciones = analizarCondiciones;
 </script>

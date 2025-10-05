@@ -383,6 +383,11 @@
                         configurarEventListeners();
                     }
                     
+                    // Forzar configuración adicional
+                    if (typeof window.forceConfigurarEventListeners === 'function') {
+                        window.forceConfigurarEventListeners();
+                    }
+                    
                     // Configurar event listeners adicionales para cerrar modal
                     configurarCierreModal();
                 }, 100);
@@ -404,6 +409,13 @@
         }
 
         modal.style.display = 'flex';
+
+        // Forzar configuración de event listeners
+        setTimeout(() => {
+            if (typeof window.forceConfigurarEventListeners === 'function') {
+                window.forceConfigurarEventListeners();
+            }
+        }, 100);
 
         // Rellenar los campos del modal
         setTimeout(() => {
@@ -429,7 +441,7 @@
             console.log('🔴 Cerrando modal predictor...');
             modal.style.display = 'none';
             
-            // Limpiar campos
+            // Limpiar campos principales
             const ubicacion = document.getElementById('ubicacion');
             const fechaInicio = document.getElementById('fechaInicio');
             const fechaFin = document.getElementById('fechaFin');
@@ -437,6 +449,16 @@
             if (ubicacion) ubicacion.value = '';
             if (fechaInicio) fechaInicio.value = '';
             if (fechaFin) fechaFin.value = '';
+            
+            // Limpiar campo de actividad personalizada
+            const actividadPersonalizada = document.getElementById('actividadPersonalizada');
+            const customActivityContainer = document.getElementById('customActivityContainer');
+            
+            if (actividadPersonalizada) actividadPersonalizada.value = '';
+            if (customActivityContainer) {
+                customActivityContainer.style.display = 'none';
+                customActivityContainer.classList.remove('show');
+            }
             
             // Ocultar resultados
             const resultados = document.getElementById('resultadosAnalisis');
