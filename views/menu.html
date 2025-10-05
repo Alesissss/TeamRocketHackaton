@@ -1,6 +1,6 @@
 {% extends "master_page.html" %}
 
-{% block title %}{{ _('Mapa Interactivo') }}{% endblock %}
+{% block title %}Choose an address{% endblock %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/map.css') }}" />
@@ -13,6 +13,8 @@
     height: 600px;
     width: 100%;
     cursor: grab;
+    border-radius: 14px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
 }
 #map:active {
     cursor: grabbing;
@@ -22,7 +24,7 @@
 .coordinates-box {
     position: absolute;
     z-index: 1000;
-    bottom: 20px;
+    bottom: 90px; /* Deja espacio para el botón */
     right: 20px;
     background: white;
     padding: 18px;
@@ -74,26 +76,66 @@
     font-weight: bold;
 }
 
+/* === Botón bonito "Seleccionar zona" / Continuar === */
+.selected-cordinates {
+    position: absolute;
+    z-index: 1100;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.selected-cordinates button {
+    background: linear-gradient(135deg, #0078ff, #00c3ff);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 32px;
+    font-size: 17px;
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(0, 120, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.selected-cordinates button:hover {
+    background: linear-gradient(135deg, #0066e4, #00a7e4);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 120, 255, 0.5);
+}
+
+.selected-cordinates button:active {
+    transform: scale(0.97);
+}
+
 /* === Ajuste móvil === */
 @media (max-width: 768px) {
     .coordinates-box {
-        bottom: 10px;
+        bottom: 100px;
         right: 10px;
         left: 10px;
         max-width: none;
         font-size: 14px;
         padding: 10px;
     }
+
+    .selected-cordinates button {
+        width: 90%;
+        font-size: 15px;
+        padding: 12px 0;
+    }
+    #contenedorModalPredictor{
+        width: 100%;
+        height: 100%;
+        margin: 15%;
+    }
 }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h2 class="text-center mt-3 mb-4">{{ _('Mapa Interactivo') }}</h2>
-            <div id="map" style="height: 80vh; width: 100%;"></div>
+<div class="col-md-6 position-relative">
+    <div id="map"></div>
     <select name="geometric_options" id="geometric_options" class="options">
         <option value="point">📍 {{ _('Punto') }}</option>
         <option value="polygon">🔷 {{ _('Polígono') }}</option>
@@ -109,8 +151,14 @@
             <strong>Polígono dibujado:</strong><br>
             <span id="polygon-coords">-</span>
         </div>
-    </div>        </div>
     </div>
+
+    <!-- Botón de continuar -->
+    <div class="selected-cordinates">
+        <button id="continueBtn">Seleccionar zona</button>
+    </div>
+    <div id="contenedorModalPredictor"></div>
+
 </div>
 {% endblock %}
 
@@ -151,13 +199,9 @@
     }).on('markgeocode', function (e) {
         const latlng = e.geocode.center;
         map.setView(latlng, 16);
-
         if (currentMode === 'point') {
-            if (!marker) {
-                marker = L.marker(latlng).addTo(map);
-            } else {
-                marker.setLatLng(latlng);
-            }
+            if (!marker) marker = L.marker(latlng).addTo(map);
+            else marker.setLatLng(latlng);
             updatePointInfo(latlng);
         }
     }).addTo(map);
@@ -176,7 +220,6 @@
         const coordText = coords.map((c, i) => 
             `P${i + 1}: (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`
         ).join('<br>');
-        
         document.getElementById('polygon-coords').innerHTML = coordText;
         document.getElementById('polygon-info').style.display = 'block';
         document.getElementById('point-info').style.display = 'none';
@@ -184,10 +227,7 @@
 
     // Inicializa controles de dibujo
     function initDrawControl() {
-        if (drawControl) {
-            map.removeControl(drawControl);
-        }
-        
+        if (drawControl) map.removeControl(drawControl);
         drawControl = new L.Control.Draw({
             draw: {
                 polygon: {
@@ -204,12 +244,8 @@
                 marker: false,
                 circlemarker: false
             },
-            edit: {
-                featureGroup: drawnItems,
-                remove: true
-            }
+            edit: { featureGroup: drawnItems, remove: true }
         });
-        
         map.addControl(drawControl);
     }
 
@@ -264,13 +300,6 @@
         }
     });
 
-    // Permitir mover mapa siempre
-    map.dragging.enable();
-    map.scrollWheelZoom.enable();
-    map.doubleClickZoom.enable();
-    map.boxZoom.enable();
-    map.on('mousedown', () => map.dragging.enable());
-
     // Ajustar campo de búsqueda
     setTimeout(() => {
         const input = document.querySelector('.leaflet-control-geocoder input');
@@ -279,5 +308,47 @@
             input.style.width = '350px';
         }
     }, 300);
+
+    // Acción del botón
+    document.getElementById('continueBtn').addEventListener('click', async function() {
+        const datosPrueba = {
+            ubicacion: "Cajamarca, Perú",
+            fechaInicio: "2025-10-06",
+            fechaFin: "2025-10-10"
+        };
+
+        await abrirModalPredictor(datosPrueba);
+    });
+
+    async function cargarModalPredictor() {
+        const contenedor = document.getElementById('contenedorModalPredictor');
+
+        // Cargar solo si aún no está insertado
+        if (!contenedor.hasChildNodes()) {
+            try {
+                const response = await fetch('/modal-predictor');
+                const html = await response.text();
+                contenedor.innerHTML = html;
+                console.log("✅ Modal cargado desde Flask");
+            } catch (err) {
+                console.error("❌ Error al cargar el modal:", err);
+            }
+        }
+    }
+
+    // === FUNCIÓN para abrir modal y pasar datos ===
+    async function abrirModalPredictor(datosMapa) {
+        await cargarModalPredictor();
+
+        const modal = document.getElementById('modalPredictorClimatico');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+
+        // Rellenar los campos del modal
+        document.getElementById('ubicacion').value = datosMapa.ubicacion;
+        document.getElementById('fechaInicio').value = datosMapa.fechaInicio;
+        document.getElementById('fechaFin').value = datosMapa.fechaFin;
+    }
 </script>
 {% endblock %}
