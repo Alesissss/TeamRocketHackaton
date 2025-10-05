@@ -6,32 +6,136 @@
 <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/map.css') }}" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+<style>
+#map {
+    height: 600px;
+    width: 100%;
+    cursor: grab;
+}
+#map:active {
+    cursor: grabbing;
+}
+
+/* === Leyenda (abajo a la derecha) === */
+.coordinates-box {
+    position: absolute;
+    z-index: 1000;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    max-width: 340px;
+    font-size: 16px;
+    font-weight: 500;
+}
+.coordinates-box strong {
+    color: #222;
+    font-size: 18px;
+}
+
+/* === Botones grandes de dibujo === */
+.leaflet-draw-toolbar a {
+    width: 46px !important;
+    height: 46px !important;
+    line-height: 46px !important;
+    background-size: 70% auto !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+.leaflet-draw-toolbar a:hover {
+    transform: scale(1.15);
+    transition: all 0.2s ease;
+}
+
+/* === Restaurar íconos de Leaflet Draw === */
+.leaflet-draw-draw-polygon {
+    background-image: url('https://unpkg.com/leaflet-draw@1.0.4/dist/images/spritesheet.svg');
+    background-position: -2px -2px;
+}
+.leaflet-draw-edit-edit {
+    background-image: url('https://unpkg.com/leaflet-draw@1.0.4/dist/images/spritesheet.svg');
+    background-position: -32px -2px;
+}
+.leaflet-draw-edit-remove {
+    background-image: url('https://unpkg.com/leaflet-draw@1.0.4/dist/images/spritesheet.svg');
+    background-position: -62px -2px;
+}
+
+/* === Botones de zoom más grandes === */
+.leaflet-control-zoom a {
+    width: 46px !important;
+    height: 46px !important;
+    line-height: 46px !important;
+    font-size: 28px !important;
+    font-weight: bold;
+}
+
+/* === Ajuste móvil === */
+@media (max-width: 768px) {
+    .coordinates-box {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block body %}
 <div class="col-md-6">
     <div id="map"></div>
-
+    <select name="geometric_options" id="geometric_options" class="options">
+        <option value="point">📍 Punto</option>
+        <option value="polygon">🔷 Polígono</option>
+    </select>
+    
+    <!-- Información de coordenadas -->
+    <div id="coordinates-info" class="coordinates-box">
+        <div id="point-info" style="display: none;">
+            <strong>Punto seleccionado:</strong><br>
+            Lat: <span id="lat">-</span>, Lng: <span id="lng">-</span>
+        </div>
+        <div id="polygon-info" style="display: none;">
+            <strong>Polígono dibujado:</strong><br>
+            <span id="polygon-coords">-</span>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block script %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
 <script>
-
-
     // Configuración del mapa
-    const map = L.map('map').setView([-9.19, -75.0152], 6);
+    const map = L.map('map', { 
+        dragging: true, 
+        zoomControl: true 
+    }).setView([-9.19, -75.0152], 6);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
         minZoom: 6,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Variable para el marcador de nueva ubicación
+    // Variables globales
     let marker;
+    let currentMode = 'point';
+    let drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+    
+    let drawControl;
+    let currentPolygon = null;
 
     // Configuración del buscador
     const searchControl = L.Control.geocoder({
@@ -44,17 +148,126 @@
         const latlng = e.geocode.center;
         map.setView(latlng, 16);
 
-        if (!marker) {
-            marker = L.marker(latlng).addTo(map);
-        } else {
-            marker.setLatLng(latlng);
+        if (currentMode === 'point') {
+            if (!marker) {
+                marker = L.marker(latlng).addTo(map);
+            } else {
+                marker.setLatLng(latlng);
+            }
+            updatePointInfo(latlng);
         }
-
-        // document.getElementById('lat').textContent = latlng.lat.toFixed(6);
-        // document.getElementById('lng').textContent = latlng.lng.toFixed(6);
     }).addTo(map);
 
-    // Ajustar el campo de búsqueda
+    // Función para actualizar información del punto
+    function updatePointInfo(latlng) {
+        document.getElementById('lat').textContent = latlng.lat.toFixed(6);
+        document.getElementById('lng').textContent = latlng.lng.toFixed(6);
+        document.getElementById('point-info').style.display = 'block';
+        document.getElementById('polygon-info').style.display = 'none';
+    }
+
+    // Función para actualizar información del polígono
+    function updatePolygonInfo(layer) {
+        const coords = layer.getLatLngs()[0];
+        const coordText = coords.map((c, i) => 
+            `P${i + 1}: (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`
+        ).join('<br>');
+        
+        document.getElementById('polygon-coords').innerHTML = coordText;
+        document.getElementById('polygon-info').style.display = 'block';
+        document.getElementById('point-info').style.display = 'none';
+    }
+
+    // Inicializa controles de dibujo
+    function initDrawControl() {
+        if (drawControl) {
+            map.removeControl(drawControl);
+        }
+        
+        drawControl = new L.Control.Draw({
+            draw: {
+                polygon: {
+                    allowIntersection: false,
+                    showArea: true,
+                    shapeOptions: {
+                        color: '#3388ff',
+                        weight: 3
+                    }
+                },
+                polyline: false,
+                rectangle: false,
+                circle: false,
+                marker: false,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: drawnItems,
+                remove: true
+            }
+        });
+        
+        map.addControl(drawControl);
+    }
+
+    // Cambio de modo (punto o polígono)
+    document.getElementById('geometric_options').addEventListener('change', function(e) {
+        currentMode = e.target.value;
+        drawnItems.clearLayers();
+        if (marker) map.removeLayer(marker);
+        marker = null;
+        document.getElementById('point-info').style.display = 'none';
+        document.getElementById('polygon-info').style.display = 'none';
+        
+        if (currentMode === 'polygon') {
+            initDrawControl();
+            map.off('click');
+        } else {
+            if (drawControl) map.removeControl(drawControl);
+            map.on('click', function(e) {
+                if (currentMode === 'point') {
+                    if (!marker) marker = L.marker(e.latlng).addTo(map);
+                    else marker.setLatLng(e.latlng);
+                    updatePointInfo(e.latlng);
+                }
+            });
+        }
+    });
+
+    // Eventos de dibujo
+    map.on(L.Draw.Event.CREATED, function (e) {
+        const layer = e.layer;
+        drawnItems.clearLayers();
+        drawnItems.addLayer(layer);
+        currentPolygon = layer;
+        updatePolygonInfo(layer);
+    });
+
+    map.on(L.Draw.Event.EDITED, function (e) {
+        e.layers.eachLayer(updatePolygonInfo);
+    });
+
+    map.on(L.Draw.Event.DELETED, function () {
+        document.getElementById('polygon-info').style.display = 'none';
+        currentPolygon = null;
+    });
+
+    // Click para crear puntos
+    map.on('click', function(e) {
+        if (currentMode === 'point') {
+            if (!marker) marker = L.marker(e.latlng).addTo(map);
+            else marker.setLatLng(e.latlng);
+            updatePointInfo(e.latlng);
+        }
+    });
+
+    // Permitir mover mapa siempre
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+    map.boxZoom.enable();
+    map.on('mousedown', () => map.dragging.enable());
+
+    // Ajustar campo de búsqueda
     setTimeout(() => {
         const input = document.querySelector('.leaflet-control-geocoder input');
         if (input) {
@@ -62,6 +275,5 @@
             input.style.width = '350px';
         }
     }, 300);
-
 </script>
 {% endblock %}
