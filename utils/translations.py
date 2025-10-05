@@ -1,4 +1,3 @@
-# Traducciones simples para la aplicación
 translations = {
     'es': {
         'Will it be rain on my parade?': '¿Lloverá en mi desfile?',

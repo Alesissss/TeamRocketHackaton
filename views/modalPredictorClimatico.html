@@ -2,7 +2,7 @@
 <div id="modalPredictorClimatico" class="modal-overlay" style="display: none;">
     <div class="modal-container">
         <!-- Botón cerrar -->
-        <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        <button class="modal-close" onclick="cerrarModalPredictor()">&times;</button>
         
         <!-- Encabezado -->
         <div class="modal-header">
@@ -444,38 +444,92 @@
 </style>
 
 <script>
+// Función para cerrar modal (compatible con función global)
 function cerrarModal() {
-    document.getElementById('modalPredictorClimatico').style.display = 'none';
-}
-
-function analizarCondiciones() {
-    // Aquí tu lógica para analizar (llamada a Flask)
-    document.getElementById('resultadosAnalisis').style.display = 'block';
-    
-    // Ejemplo de cómo podrías llamar a tu backend Flask
-    // fetch('/analizar-clima', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({
-    //         ubicacion: document.getElementById('ubicacion').value,
-    //         fechaInicio: document.getElementById('fechaInicio').value,
-    //         fechaFin: document.getElementById('fechaFin').value
-    //     })
-    // })
-}
-
-// Selección de actividad
-document.querySelectorAll('.activity-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-    });
-});
-
-// Cerrar modal al hacer click fuera
-document.getElementById('modalPredictorClimatico').addEventListener('click', function(e) {
-    if (e.target === this) {
-        cerrarModal();
+    if (typeof window.cerrarModalPredictor === 'function') {
+        window.cerrarModalPredictor();
+    } else {
+        // Fallback si no existe la función global
+        console.log('Cerrando modal...');
+        const modal = document.getElementById('modalPredictorClimatico');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
-});
+}
+
+// Alias para compatibilidad
+window.cerrarModal = cerrarModal;
+
+// Función para analizar condiciones
+function analizarCondiciones() {
+    console.log('Iniciando análisis...');
+    
+    // Obtener valores
+    const ubicacion = document.getElementById('ubicacion')?.value;
+    const fechaInicio = document.getElementById('fechaInicio')?.value;
+    const fechaFin = document.getElementById('fechaFin')?.value;
+    
+    console.log('Datos:', { ubicacion, fechaInicio, fechaFin });
+    
+    if (!ubicacion || !fechaInicio || !fechaFin) {
+        alert('Por favor completa todos los campos');
+        return;
+    }
+    
+    // Mostrar resultados
+    const resultados = document.getElementById('resultadosAnalisis');
+    if (resultados) {
+        resultados.style.display = 'block';
+        console.log('Resultados mostrados');
+    } else {
+        console.error('No se encontró el elemento resultadosAnalisis');
+    }
+}
+
+// Configurar event listeners cuando el modal se carga
+function configurarEventListeners() {
+    console.log('Configurando event listeners...');
+    
+    // Event listener para cerrar con click fuera del modal
+    const modal = document.getElementById('modalPredictorClimatico');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                console.log('Click fuera del modal');
+                cerrarModal();
+            }
+        });
+        
+        // Event listener para tecla Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display !== 'none') {
+                console.log('Tecla Escape presionada');
+                cerrarModal();
+            }
+        });
+    }
+    
+    // Event listeners para botones de actividad
+    const activityBtns = document.querySelectorAll('.activity-btn');
+    activityBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            console.log('Actividad seleccionada:', this.dataset.activity);
+            activityBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    console.log('Event listeners configurados');
+}
+
+// Inicializar cuando el contenido se carga
+setTimeout(configurarEventListeners, 100);
+
+// También configurar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', configurarEventListeners);
+} else {
+    configurarEventListeners();
+}
 </script>
