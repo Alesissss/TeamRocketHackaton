@@ -31,7 +31,7 @@ print()
 # 2. Probar importación del predictor
 print("2️⃣ Probando importación del predictor...")
 try:
-    from weather_predictor import ImprovedWeatherPredictor
+    from models.weather_predictor import ImprovedWeatherPredictor
     print("   ✅ Predictor importado correctamente")
 except Exception as e:
     print(f"   ❌ Error al importar: {e}")
