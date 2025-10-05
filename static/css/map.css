@@ -14,18 +14,18 @@
     z-index: 1000;
     bottom: clamp(20px, 4vh, 40px);
     left: clamp(20px, 4vw, 40px);
-    
+
     /* Estilos del select */
     font-size: clamp(16px, 4vw, 22px);
     padding: clamp(12px, 3vh, 18px) clamp(16px, 4vw, 24px);
     min-width: min(250px, 50vw);
-    
+
     /* Apariencia */
     background: white;
     border: 2px solid #ddd;
     border-radius: clamp(8px, 2vw, 12px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    
+
     /* Interacción */
     cursor: pointer;
     outline: none;
@@ -49,9 +49,11 @@
         left: 16px;
         right: 16px;
         min-width: auto;
-        font-size: 18px; /* Más grande en móvil para mejor legibilidad */
+        font-size: 18px;
+        /* Más grande en móvil para mejor legibilidad */
     }
 }
+
 /*
 .options select {
     width: 200px;

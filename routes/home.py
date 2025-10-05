@@ -12,12 +12,11 @@ def index():
 
 @bp_home.route('/menu')
 def menu():
-    return render_template('menu.html')
+    return render_template('menu_simple.html')
 
 @bp_home.route('/change_language/<language>')
 def change_language(language):
     session['lang'] = language
-    # Redirigir a la página de donde vino o al home
     return redirect(request.referrer or url_for('home.index'))
 
 @bp_home.route('/uploads/<path:filename>')

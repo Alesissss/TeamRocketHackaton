@@ -1,0 +1,280 @@
+{% extends "master_page.html" %}
+
+{% block title %}{{ _('Mapa Interactivo') }}{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/map.css') }}" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+#map {
+    height: 90vh;
+    width: 100%;
+    z-index: 1;
+}
+
+.coordinates-box {
+    position: absolute;
+    z-index: 1000;
+    bottom: 20px;
+    left: 300px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    max-width: 600px;
+    font-size: 16px;
+}
+
+.options {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    height: 50px;
+    max-width: 200px;
+}
+
+.options:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.options:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-right mt-3 mb-4 justify-content-center align-items-center" style="color: white;">{{ _('Mapa Interactivo') }}</h2>
+            
+            <!-- Mapa -->
+            <div id="map"></div>
+            
+            <!-- Selector de modo -->
+            <select name="geometric_options" id="geometric_options" class="options">
+                <option value="point" selected>📍 {{ _('Punto') }}</option>
+                <option value="polygon">🔷 {{ _('Polígono') }}</option>
+            </select>
+            
+            <!-- Información de coordenadas -->
+            <div id="coordinates-info" class="coordinates-box">
+                <div id="point-info" style="display: none;">
+                    <strong>{{ _('Punto seleccionado:') }}</strong>
+                    Lat: <span id="lat">-</span>, Lng: <span id="lng">-</span>
+                </div>
+                <div id="polygon-info" style="display: none;">
+                    <strong>{{ _('Polígono dibujado:') }}</strong>
+                    <span id="polygon-coords">-</span>
+                </div>
+                <div id="help-info" style="font-size: 12px; color: #666; margin-top: 10px;">
+                    <div id="help-point" style="display: block;">
+                        📍 {{ _('Click para marcar punto') }}
+                    </div>
+                    <div id="help-polygon" style="display: none;">
+                        🔷 {{ _('Click para agregar puntos') }}<br>
+                        {{ _('Doble-click para completar') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+    
+    // Crear mapa básico
+    const map = L.map('map').setView([-9.19, -75.0152], 6);
+    console.log('Mapa creado');
+
+    // Agregar tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        minZoom: 3,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    console.log('Tiles agregados');
+
+    // Variables globales
+    let marker = null;
+    let currentMode = 'point';
+    let polygonPoints = [];
+    let currentPolygon = null;
+    let tempMarkers = [];
+
+    // Forzar redimensionamiento del mapa
+    setTimeout(() => {
+        map.invalidateSize();
+        console.log('Mapa redimensionado');
+    }, 100);
+
+    // Función para agregar marcador de punto
+    function addPointMarker(latlng) {
+        console.log('Agregando marcador en:', latlng);
+        
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        
+        marker = L.marker(latlng).addTo(map);
+        
+        // Mostrar información
+        document.getElementById('lat').textContent = latlng.lat.toFixed(6);
+        document.getElementById('lng').textContent = latlng.lng.toFixed(6);
+        document.getElementById('point-info').style.display = 'block';
+        document.getElementById('polygon-info').style.display = 'none';
+    }
+
+    // Función para manejar polígono
+    function addPolygonPoint(latlng) {
+        console.log('Agregando punto del polígono:', latlng);
+        
+        polygonPoints.push(latlng);
+        
+        // Agregar marcador temporal
+        const tempMarker = L.marker(latlng, {
+            icon: L.divIcon({
+                className: 'polygon-point',
+                html: '<div style="background-color: #ff6b6b; width: 8px; height: 8px; border-radius: 50%; border: 2px solid white;"></div>',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            })
+        }).addTo(map);
+        
+        tempMarkers.push(tempMarker);
+        
+        if (polygonPoints.length >= 3) {
+            // Crear o actualizar polígono
+            if (currentPolygon) {
+                map.removeLayer(currentPolygon);
+            }
+            
+            currentPolygon = L.polygon(polygonPoints, {
+                color: '#007bff',
+                fillColor: '#007bff',
+                fillOpacity: 0.3,
+                weight: 2
+            }).addTo(map);
+            
+            // Mostrar información
+            const coordsText = polygonPoints.map((point, i) => 
+                `${i + 1}: [${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}]`
+            ).join('<br>');
+            
+            document.getElementById('polygon-coords').innerHTML = coordsText;
+            document.getElementById('polygon-info').style.display = 'block';
+            document.getElementById('point-info').style.display = 'none';
+        }
+    }
+
+    // Función para limpiar polígono
+    function clearPolygon() {
+        if (currentPolygon) {
+            map.removeLayer(currentPolygon);
+            currentPolygon = null;
+        }
+        
+        tempMarkers.forEach(marker => map.removeLayer(marker));
+        tempMarkers = [];
+        polygonPoints = [];
+        
+        document.getElementById('polygon-info').style.display = 'none';
+    }
+
+    // Evento click en el mapa
+    map.on('click', function(e) {
+        console.log('Click en mapa:', e.latlng, 'Modo:', currentMode);
+        
+        if (currentMode === 'point') {
+            addPointMarker(e.latlng);
+        } else if (currentMode === 'polygon') {
+            addPolygonPoint(e.latlng);
+        }
+    });
+
+    // Evento doble click para cerrar polígono
+    map.on('dblclick', function(e) {
+        if (currentMode === 'polygon' && polygonPoints.length >= 3) {
+            console.log('Polígono completado con doble click');
+            // El polígono ya está dibujado, solo confirmamos
+        }
+    });
+
+    // Cambio de modo
+    document.getElementById('geometric_options').addEventListener('change', function(e) {
+        currentMode = e.target.value;
+        console.log('Modo cambiado a:', currentMode);
+        
+        // Limpiar todo
+        if (marker) {
+            map.removeLayer(marker);
+            marker = null;
+        }
+        
+        clearPolygon();
+        
+        document.getElementById('point-info').style.display = 'none';
+        document.getElementById('polygon-info').style.display = 'none';
+        
+        // Cambiar ayuda
+        if (currentMode === 'point') {
+            document.getElementById('help-point').style.display = 'block';
+            document.getElementById('help-polygon').style.display = 'none';
+        } else {
+            document.getElementById('help-point').style.display = 'none';
+            document.getElementById('help-polygon').style.display = 'block';
+        }
+    });
+
+    // Configurar buscador (opcional)
+    try {
+        const searchControl = L.Control.geocoder({
+            position: 'topright',
+            defaultMarkGeocode: false,
+            geocoder: L.Control.Geocoder.nominatim() //    geocodingQueryParams: { countrycodes: 'pe' }
+        }).on('markgeocode', function (e) {
+            const latlng = e.geocode.center;
+            map.setView(latlng, 16);
+            
+            if (currentMode === 'point') {
+                addPointMarker(latlng);
+            }
+        }).addTo(map);
+        
+        // Configurar placeholder del buscador
+        setTimeout(() => {
+            const input = document.querySelector('.leaflet-control-geocoder input');
+            if (input) {
+                input.placeholder = "{{ _('Buscar ubicación ...') }}";
+                input.style.width = '300px';
+            }
+        }, 200);
+        
+    } catch(error) {
+    }
+
+</script>
+{% endblock %}

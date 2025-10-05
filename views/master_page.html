@@ -10,61 +10,13 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('home.uploads', filename='rocket.ico') }}">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/bootstrap.min.css') }}">
-3w
+
     <link rel="stylesheet" href="{{ url_for('home.static_files', filename='css/index.css') }}">
 
     {% block style %} {% endblock %}
     
-    <!-- CSS para el selector de idioma -->
-    <style>
-        .language-selector {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-        }
-        
-        .language-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #dee2e6;
-            border-radius: 25px;
-            padding: 8px 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .language-btn:hover {
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transform: translateY(-2px);
-        }
-        
-        .dropdown-menu {
-            border-radius: 15px;
-            border: none;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-            min-width: 120px;
-        }
-        
-        .dropdown-item {
-            padding: 10px 15px;
-            transition: background-color 0.2s ease;
-        }
-        
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .flag-emoji {
-            font-size: 18px;
-            margin-right: 8px;
-        }
-    </style>
-    
 </head>
 <body>
-    <!-- Header con selector de idioma -->
     <header>
         <div class="language-selector">
             <div class="dropdown">
