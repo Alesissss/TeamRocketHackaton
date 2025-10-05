@@ -14,6 +14,11 @@ def index():
 def menu():
     return render_template('menu.html')
 
+@bp_home.route('/modal-predictor')
+def modal_predictor():
+    # Renderiza solo el contenido del modal
+    return render_template('modalPredictorClimatico.html')
+
 @bp_home.route('/change_language/<language>')
 def change_language(language):
     session['lang'] = language
