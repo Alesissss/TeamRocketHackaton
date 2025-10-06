@@ -43,6 +43,7 @@ translations = {
         'Por favor completa todos los campos y selecciona una actividad': 'Por favor completa todos los campos y selecciona una actividad',
         'Error al obtener predicción: ': 'Error al obtener predicción: ',
         'Error de conexión: ': 'Error de conexión: ',
+        'Por favor selecciona un punto o dibuja un polígono primero': 'Por favor selecciona un punto o dibuja un polígono primero',
     },
     'en': {
         'Will it be rain on my parade?': 'Will it be rain on my parade?',
@@ -88,6 +89,7 @@ translations = {
         'Por favor completa todos los campos y selecciona una actividad': 'Please complete all fields and select an activity',
         'Error al obtener predicción: ': 'Error getting prediction: ',
         'Error de conexión: ': 'Connection error: ',
+        'Por favor selecciona un punto o dibuja un polígono primero': 'Please select a point or draw a polygon first.',
     }
 }
 

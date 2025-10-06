@@ -632,7 +632,7 @@ function mostrarResultadosClimaticos(data, actividad) {
     // Actualizar título con nota si hay
     const tituloResultados = document.querySelector('.resultados-title');
     if (tituloResultados) {
-        let texto = 'Análisis de Riesgos Climáticos';
+        let texto = "{{ _('Análisis de Riesgos Climáticos') }}";
         if (data.nota && data.nota.includes('SIMULADO')) {
             texto += ' (⚠️ Datos Simulados)';
         }
