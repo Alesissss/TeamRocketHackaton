@@ -30,7 +30,14 @@ translations = {
         'jue': 'jue',
         'vie': 'vie',
         'Recomendación': 'Recomendación',
-        'Exportar PDF': 'Exportar PDF'
+        'Exportar PDF': 'Exportar PDF',
+        'No hay resultados para exportar': 'No hay resultados para exportar',
+        '✅ PDF generado exitosamente: ': '✅ PDF generado exitosamente: ',
+        'Error al generar PDF: ': 'Error al generar PDF: ',
+        'Por favor escribe tu actividad en el campo "Otra"': 'Por favor escribe tu actividad en el campo ´Otra´',
+        'Por favor completa todos los campos y selecciona una actividad': 'Por favor completa todos los campos y selecciona una actividad',
+        'Error al obtener predicción: ': 'Error al obtener predicción: ',
+        'Error de conexión: ': 'Error de conexión: ',
     },
     'en': {
         'Will it be rain on my parade?': 'Will it be rain on my parade?',
@@ -63,7 +70,14 @@ translations = {
         'jue': 'thu',
         'vie': 'fri',
         'Recomendación': 'Recommendation',
-        'Exportar PDF': 'Export PDF'
+        'Exportar PDF': 'Export PDF',
+        'No hay resultados para exportar': 'There are no results to export',
+        '✅ PDF generado exitosamente: ': '✅ PDF generated successfully: ',
+        'Error al generar PDF: ': 'Error generating PDF: ',
+        'Por favor escribe tu actividad en el campo "Otra"': 'Please write your activity in the field ´Other´',
+        'Por favor completa todos los campos y selecciona una actividad': 'Please complete all fields and select an activity',
+        'Error al obtener predicción: ': 'Error getting prediction: ',
+        'Error de conexión: ': 'Connection error: ',
     }
 }
 

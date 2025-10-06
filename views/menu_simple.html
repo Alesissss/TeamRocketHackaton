@@ -623,7 +623,7 @@
             // Obtener el contenedor de resultados
             const resultadosDiv = document.getElementById('resultadosAnalisis');
             if (!resultadosDiv) {
-                alert('No hay resultados para exportar');
+                alert('{{ _("No hay resultados para exportar") }}');
                 return;
             }
             
@@ -837,11 +837,11 @@
             console.log('✅ PDF generado exitosamente:', nombreArchivo);
             
             // Mostrar mensaje de éxito
-            alert('✅ PDF generado exitosamente: ' + nombreArchivo);
+            alert("{{ _('✅ PDF generado exitosamente: ') }}" + nombreArchivo);
             
         } catch (error) {
             console.error('❌ Error al generar PDF:', error);
-            alert('Error al generar PDF: ' + error.message);
+            alert("{{ _('Error al generar PDF: ') }}" + error.message);
         } finally {
             btnExportar.innerHTML = textoOriginal;
             btnExportar.disabled = false;
@@ -868,7 +868,7 @@
                 }
 
                 if (!actividad) {
-                    alert('Por favor escribe tu actividad en el campo "Otra"');
+                    alert(`{{ _('Por favor escribe tu actividad en el campo "Otra"') }} `);
                     if (inputEnBoton) inputEnBoton.focus();
                     return;
                 }
@@ -879,7 +879,7 @@
         }
 
         if (!ubicacion || !fechaInicio || !fechaFin || !actividad) {
-            alert('Por favor completa todos los campos y selecciona una actividad');
+            alert("{{ _('Por favor completa todos los campos y selecciona una actividad') }}");
             return;
         }
 
@@ -934,11 +934,11 @@
                 }
             } else {
                 console.error('❌ Error en API:', result.error);
-                alert('Error al obtener predicción: ' + result.error);
+                alert("{{ _('Error al obtener predicción: ') }}" + result.error);
             }
         } catch (error) {
             console.error('❌ Error en petición:', error);
-            alert('Error de conexión: ' + error.message);
+            alert("{{ _('Error de conexión: ') }}" + error.message);
         } finally {
             btnAnalizar.textContent = textoOriginal;
             btnAnalizar.disabled = false;
