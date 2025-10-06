@@ -35,6 +35,7 @@ def get_locale():
 # Registrar la función locale selector
 babel.locale_selector_func = get_locale
 
+
 # Hacer funciones de Babel disponibles en templates
 @app.context_processor
 def inject_conf_vars():
